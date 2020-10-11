@@ -2,19 +2,6 @@
 #include "work2.h"
 using namespace std;
 
-//class Item {
-//public:
-//	std::string symbol;
-//	std::string word;
-//	Item(std::string sym, std::string wo);
-//};
-//Item::Item(std::string sym, std::string wo)
-//{
-//	symbol = sym;
-//	word = wo;
-//}
-//Item s[100];
-
 void clearToken()
 {
 	memset(token, 0, sizeof(token));
@@ -136,13 +123,9 @@ bool isUndLine()
 void getChar()
 {
 	tmpChar = text[cur++];
-//	if (cur != totalLen) {
-//		cur++;
-//	}
 }
 void retract() // mainly for token word;
 {
-//	token[strlen(token)] = '\0';
 	if (cur != 0)
 		tmpChar = text[--cur];
 }
@@ -154,8 +137,7 @@ void catToken()
 
 void reserver()
 {
-//	cout << token << endl;
-	char t[100]; ///////////////////////////////////////这里数组一开始开小了，导致栈溢出，才出现了runtime  error
+	char t[1000]; ///////////////////////////////////////这里数组一开始开小了，导致栈溢出，才出现了runtime  error
 	memset(t, 0, sizeof(t));
 	for (int i = 0; i < strlen(token); i++) {
 		if (token[i] <= 'Z' && token[i] >= 'A')
@@ -163,8 +145,7 @@ void reserver()
 		else 
 			t[i] = token[i]; 
 	}
-//	printf("....%s>>>\n", t);
-	
+
 	if (strcmp(t, "const") == 0) {
 		strcpy_s(symbol, "CONSTTK");
 	}
@@ -227,7 +208,6 @@ void getsym()
 	}
 	 
 // 此处已经有一个非空的字符了
- 
 	if (isLetter() || isUndLine()) { // if the tmpChar is a letter
 		
 		do{
@@ -235,16 +215,8 @@ void getsym()
 			getChar();
 			
 		} while(isLetter() || isDigit() || isUndLine());
-		
-//		while() {
-//			catToken();
-//			getChar();
-//		}
 		retract();
-		//int resultValue = 
 		reserver();
-//		if (resultValue == 0) strcat(symbol, "IDENFR");
-//		else 				  strcat(symbol, resultValue1); //
 	}
 	
 	else if (isDigit()) {
@@ -254,12 +226,8 @@ void getsym()
 			getChar();
 		}while(isDigit());
 		
-//		while(isDigit()) {
-//			catToken();
-//			getChar();
-//		}
 		retract();
-//		num = transNum(token);
+
 		strcpy_s(symbol, "INTCON");
 	}
 	
@@ -267,19 +235,10 @@ void getsym()
 		catToken();
 		strcpy_s(symbol, "COLON");
 	}
-//	else {
-//		strcpy(symbol, "NOTDEFINEDNOW.");
-//	}
-	
+
 	else if (isEqu()) {
-//		getChar(); // 再取=后面的符号 
-//		if (isLess()) { // <=
-//			
-//		}
-//		else if (isGreater()) { // >=		
-//		}
+
 		catToken();
-		
 		getChar();
 		
 		if (isEqu()) {
@@ -287,7 +246,6 @@ void getsym()
 			strcpy_s(symbol, "EQL");
 		}
 		else {
-//			catToken();
 			strcpy_s(symbol, "ASSIGN");
 			retract(); // error 2: 这里要回退一个字符 
 		}	
@@ -390,11 +348,6 @@ void getsym()
 		}
 		strcpy_s(symbol, "STRCON");
 	}
-
-	
-	/*if (cur > strlen(text) - 1) {
-		exit(1);
-	}*/
 }
 
 void ReadFiles()
@@ -429,35 +382,13 @@ void work2()
 {
 	int i = 0;
 	while (cur <= strlen(text) - 1) {
-		getsym();
-		//if (strcmp(symbol, "") != 0)
-		//	//			printf("%s %s\n", symbol, token);
-		//	fprintf(out, "%s %s\n", symbol, token);
-		////			fprintf(out, "afd");
+		getsym();;
 		if (strcmp(symbol, "") != 0) {
-			/*string tmpsymbol = symbol;
-			string tmpword = token;*/
 			s[i].symbolx = symbol;
 			s[i].wordx = token;
 			printf("%s %s\n", s[i].symbolx.c_str(), s[i].wordx.c_str());
-			//fprintf(out, "%s %s\n", s[i].symbolx.c_str(), s[i].wordx.c_str());
-			//s[i++] = Item(tmpsymbol, tmpword);
-			/*printf("%s %s\n",(s[i-1].symbol).c_str(), (s[i-1].word).c_str());
-			fprintf(out, "%s %s\n", (s[i - 1].symbol).c_str(), (s[i - 1].word).c_str());*/
-			//printf("%s %s\n", symbol, token);
-			//fprintf(out, "%s %s\n", symbol, token);
 		}
 		i++;
 	}
 	slength = i;
 }
-
-//void output2file(string s)
-//{
-//	fprintf(out, "%s\n",s);
-//}
-
-//void output2file(string s1, string s2)
-//{
-//	fprintf(out, "%s %s\n", s1, s2);
-//}
