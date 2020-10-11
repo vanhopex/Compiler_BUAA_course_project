@@ -2,7 +2,6 @@
 #include "work2.h"
 #include "work3.h"
 using namespace std;
-
 // 查看下一个单词和类别码
 void NextSym()
 {
@@ -12,7 +11,6 @@ void NextSym()
 		symcur++;
 	}
 }
-
 // 查看当前单词开始后面第k个单词的类别码
 string Peek(int k)
 {
@@ -44,11 +42,11 @@ void IntegerWithoutSign()
 // 整数
 void Integer()
 {
-	if (sym == "PLUS" || sym == "MINU") { 
+	if (sym == "PLUS" || sym == "MINU") {
 		// 保存PLUS or MINU
-		SaveLex(); 
+		SaveLex();
 		// 无符号整数
-		NextSym(); 
+		NextSym();
 	}
 	IntegerWithoutSign();// 这里调用NextSym();
 
@@ -56,6 +54,139 @@ void Integer()
 	SaveGrammer("<整数>");
 	/*NextSym();*/
 }
+// ＜常量＞   ::=  ＜整数＞|＜字符＞
+void Constant()
+{
+	if (sym == "CHARTK") {
+		SaveLex();
+	}
+	else {
+		Integer();
+	}
+}
+//＜变量定义及初始化＞  ::= ＜类型标识符＞＜标识符＞=＜常量＞|＜类型标识符＞＜标识符＞'['＜无符号整数＞']'='{'＜常量＞{,＜常量＞}'}'|＜类型标识符＞＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']'='{''{'＜常量＞{,＜常量＞}'}'{, '{'＜常量＞{,＜常量＞}'}'}'}'
+void VariableInitialized()
+{
+	SaveLex(); // 保存 = 
+	//
+	NextSym();
+
+	if (sym == "LBRACE") {
+		SaveLex(); // {
+
+		// { {c,... } , {}}
+		NextSym();
+
+		if (sym == "LBRACE") {
+			SaveLex(); // {
+			//常量
+			NextSym();
+			Constant();
+			// ，
+			while (sym == "COMMA") {
+				SaveLex();
+				Constant();
+			}
+			// }
+			if (sym != "RBRACE") error();
+			SaveLex();
+
+			while (sym == "COMMA") {
+				SaveLex();
+
+				// {
+				NextSym();
+				SaveLex();
+
+				// 常量
+				NextSym();
+				Constant();
+
+				while (sym == "COMMA") {
+					SaveLex();
+					Constant();
+				}
+				// }
+				if (sym != "RBRACE") error();
+				SaveLex();
+			}
+		}
+		// {c...}
+		else {
+			Constant();
+			while (sym == "COMMA") {
+				SaveLex();
+				//常量
+				NextSym();
+				Constant();
+			}
+		}
+		if (sym != "RBRACE") error();
+		SaveLex();
+		NextSym();
+	}
+	else {
+		Constant();
+	}
+	SaveGrammer("＜变量定义及初始化＞");
+}
+// ＜变量定义无初始化＞  ::= ＜类型标识符＞(＜标识符＞|＜标识符＞'['＜无符号整数＞']'|＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']'){,(＜标识符＞|＜标识符＞'['＜无符号整数＞']'|＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']' )}
+void VariableUninitialized()
+{
+
+	SaveGrammer("＜变量定义无初始化＞");
+	//NextSym();
+}
+//＜变量定义＞ ::= ＜变量定义无初始化＞|＜变量定义及初始化＞
+void VariableDefinition()
+{
+	SaveLex(); // 类型标识符
+
+	NextSym();
+	SaveLex(); // 标识符
+
+	// 前面是提取左因子
+	NextSym();
+
+
+	if (sym == "LBRACK") {
+		while (sym == "LBRACK") {
+			SaveLex();
+
+			// 无符号整数
+			NextSym();
+			IntegerWithoutSign();
+			// 
+			if (sym != "RBRACK") error();
+			SaveLex();
+
+			NextSym();
+		}
+	}
+	// 下一个是等号的话，就是有初始化，否则无初始化
+	if (sym == "ASSIGN") {
+		VariableInitialized();
+	}
+	else {
+		VariableUninitialized();
+	}
+	SaveGrammer("<变量定义>");
+}
+//＜变量说明＞  ::= ＜变量定义＞;{＜变量定义＞;} 
+// 因为变量定义和声明头部前面几个一样，所以需要区分
+void VariableExplanation()
+{
+	VariableDefinition();
+	while (sym == "SEMICN") {
+		SaveLex();
+		NextSym();
+		//＜变量定义＞
+		if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK") && (Peek(2) != "LPARENT"))
+			VariableDefinition();
+	}
+	SaveGrammer("<变量说明>");
+}
+
 // 常量定义
 //＜常量定义＞   :: = int＜标识符＞＝＜整数＞{ ,＜标识符＞＝＜整数＞ }
 //                  | char＜标识符＞＝＜字符＞{ ,＜标识符＞＝＜字符＞
@@ -152,6 +283,573 @@ void ConstantExplanation()
 	}
 	SaveGrammer("<常量说明>");
 }
+
+//＜字符串＞   ::=  "｛十进制编码为32,33,35-126的ASCII字符｝"
+void StringG()
+{
+
+}
+// ＜因子＞    ::= ＜标识符＞｜＜标识符＞'['＜表达式＞']'|＜标识符＞'['＜表达式＞']''['＜表达式＞']'|'('＜表达式＞')'｜＜整数＞|＜字符＞｜＜有返回值函数调用语句＞    
+void Factor()
+{
+
+}
+// ＜项＞     ::= ＜因子＞{＜乘法运算符＞＜因子＞}   
+void Term()
+{
+	Factor();
+	while (sym == "MULT" || sym == "DIV") {
+		SaveLex();
+		Factor();
+	}
+	SaveGrammer("＜项＞");
+}
+//＜表达式＞    ::= ［＋｜－］＜项＞{＜加法运算符＞＜项＞} 
+void Expression()
+{
+	if (sym == "PLUS" || sym == "MINU") {
+		SaveLex();
+		NextSym();
+	}
+
+	while (sym == "PLUS" || sym == "MINU") {
+		SaveLex();
+		NextSym();
+		Term();
+	}
+	SaveGrammer("＜表达式＞");
+}
+
+// ＜读语句＞    ::=  scanf '('＜标识符＞')' 
+void ReadStatement()
+{
+	if (sym != "SCANFTK") error();
+	SaveLex();
+	// （
+	NextSym();
+	SaveLex();
+	// 
+	NextSym();
+	SaveLex();
+	// 
+	NextSym();
+	SaveLex();
+	// 
+
+	SaveGrammer("＜读语句＞");
+	NextSym();
+}
+
+//＜写语句＞    ::= printf '(' ＜字符串＞,＜表达式＞ ')'| printf '('＜字符串＞ ')'| printf '('＜表达式＞')' 
+void WriteStatement()
+{
+
+}
+
+//＜缺省＞   ::=  default :＜语句＞ 
+void DefaultStatement()
+{
+	if (sym != "DEFAULTTK") error();
+	SaveLex();
+	// :
+	NextSym();
+	SaveLex();
+	// 语句
+	NextSym();
+	Statement();
+
+	SaveGrammer("＜缺省＞");
+}
+//＜情况表＞   ::=  ＜情况子语句＞{＜情况子语句＞}   
+void CaseTable()
+{
+	while (sym == "CASETK") {
+		CaseSubStatement();
+	}
+	SaveGrammer("＜情况表＞");
+}
+//＜情况子语句＞  ::=  case＜常量＞：＜语句＞   
+void CaseSubStatement()
+{
+	if (sym != "CASETK") error();
+	SaveLex();
+	// 常量
+	NextSym();
+	Constant();
+	//: 
+	if (sym != "COLON") error();
+	SaveLex();
+	//语句
+	NextSym();
+	Statement();
+	SaveGrammer("＜情况子语句＞");
+}
+//＜情况语句＞  ::=  switch ‘(’＜表达式＞‘)’ ‘{’＜情况表＞＜缺省＞‘}’  
+void SwitchStatement()
+{
+	if (sym != "SWITCHTK") error();
+	SaveLex();
+	// (
+	NextSym();
+	SaveLex();
+	// 表达式
+	NextSym();
+	Expression();
+	// )
+	if (sym != "RPARENT") error();
+	SaveLex();
+	// {
+	NextSym();
+	SaveLex();
+	// 情况表
+	NextSym();
+	CaseTable();
+	// 缺省
+	DefaultStatement();
+	//} 
+	if (sym != "RBRACE") error();
+	SaveLex();
+
+	SaveGrammer("＜情况语句＞");
+	NextSym();
+}
+
+// ＜赋值语句＞   ::=  ＜标识符＞＝＜表达式＞|＜标识符＞'['＜表达式＞']'=＜表达式＞|＜标识符＞'['＜表达式＞']''['＜表达式＞']' =＜表达式＞
+void AssignStatement()
+{
+	// 标识符
+	SaveLex();
+	// 
+	NextSym();
+	// [
+	if (sym == "LBRACK") {
+		// [
+		while (sym == "LBRACK") {
+			SaveLex();
+
+			// 表达式
+			NextSym();
+			Expression();
+			// ]
+			if (sym != "RBRACK") error();
+			SaveLex();
+
+			// [
+			NextSym();
+		}
+	}
+	// 下一个是等号
+	if (sym != "ASSIGN") error();
+
+	SaveLex();
+	Expression();
+
+	SaveGrammer("＜赋值语句＞");
+}
+//＜返回语句＞   ::=  return['('＜表达式＞')']   
+void ReturnStatement()
+{
+	if (sym != "RETURNTK") error();
+	SaveLex();
+	// (
+	NextSym();
+	if (sym == "LPARENT") {
+		SaveLex();
+		Expression();
+		//)
+		if (sym != "RPARENT") error();
+		SaveLex();
+		NextSym();
+	}
+}
+
+//＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}｜＜空＞
+void ValueParameterTable()
+{
+	// ) 即为空
+	if (sym != "RPARENT") {
+
+		Expression();
+		// ,
+		while (sym == "COMMA") {
+			SaveLex();
+			Expression();
+		}
+	}
+	SaveGrammer("＜值参数表＞");
+}
+//＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'   
+void FunctionWithReturn()
+{
+	SaveLex();
+	// (
+	NextSym();
+	SaveLex();
+	// 值参数表
+	NextSym();
+	ValueParameterTable();
+	//)
+	if (sym != ")") error();
+	SaveLex();
+	SaveGrammer("＜有返回值函数调用语句＞");
+	NextSym();
+}
+// ＜无返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
+void FunctionWithoutReturn()
+{
+	SaveLex();
+	// (
+	NextSym();
+	SaveLex();
+	// 值参数表
+	NextSym();
+	ValueParameterTable();
+	//)
+	if (sym != ")") error();
+	SaveLex();
+	SaveGrammer("＜无返回值函数调用语句＞");
+	NextSym();
+}
+
+//＜条件＞    ::=  ＜表达式＞＜关系运算符＞＜表达式＞     
+void Requirement()
+{
+	Expression();
+	//关系运算符
+	NextSym();
+	SaveLex();
+	//表达式
+	NextSym();
+	Expression();
+
+	SaveGrammer("＜条件＞");
+}
+
+//＜条件语句＞  ::= if '('＜条件＞')'＜语句＞［else＜语句＞］ 
+void IfStatement()
+{
+	// if
+	if (sym != "IFTK") error();
+	SaveLex();
+	//(
+	NextSym();
+	SaveLex();
+	//
+	NextSym();
+	Requirement();
+	//)
+	if (sym != "RPARENT") error();
+	SaveLex();
+	// 语句
+	NextSym();
+	Statement();
+	//
+	if (sym == "ELSETK") {
+		SaveLex();
+		// 语句
+		NextSym();
+		Statement();
+	}
+	SaveGrammer("＜条件语句＞");
+}
+//＜步长＞::= ＜无符号整数＞  
+void Ilength()
+{
+	IntegerWithoutSign();
+	SaveGrammer("＜步长＞");
+}
+
+//＜循环语句＞   ::=  while '('＜条件＞')'＜语句＞| for'('＜标识符＞＝＜表达式＞;＜条件＞;＜标识符＞＝＜标识符＞(+|-)＜步长＞')'＜语句＞ 
+void WhileStatement()
+{
+	if (sym == "WHILETK") {
+		// while
+		SaveLex();
+		//(
+		NextSym();
+		SaveLex();
+		//条件
+		NextSym();
+		Requirement();
+		// )
+		if (sym != ")") error();
+		SaveLex();
+		//语句
+		NextSym();
+		Statement();
+	}
+	else if (sym == "FORTK") {
+		//for
+		SaveLex();
+		//(
+		NextSym();
+		SaveLex();
+		//标识符
+		NextSym();
+		SaveLex();
+		// =
+		NextSym();
+		SaveLex();
+		// 表达式
+		NextSym();
+		Expression();
+		//;
+		if (sym != "SEMICN") error();
+		SaveLex();
+		// 条件
+		NextSym();
+		Requirement();
+		//;
+		if (sym != "SEMICN") error();
+		SaveLex();
+		//标识符
+		NextSym();
+		SaveLex();
+		// =
+		NextSym();
+		SaveLex();
+		//标识符
+		NextSym();
+		SaveLex();
+		// （+|-）
+		NextSym();
+		SaveLex();
+		//
+		NextSym();
+		Ilength();
+		// )
+		if (sym != "RPARENT") error();
+		SaveLex();
+		// 语句
+		NextSym();
+		Statement();
+	}
+	SaveGrammer("＜循环语句＞");
+}
+//＜语句＞    ::= ＜循环语句＞｜＜条件语句＞| ＜有返回值函数调用语句＞;  |＜无返回值函数调用语句＞;｜＜赋值语句＞;｜＜读语句＞;｜＜写语句＞;｜＜情况语句＞｜＜空＞;|＜返回语句＞; | '{'＜语句列＞'}'    
+void Statement()
+{
+	if (sym == "WHILETK" || sym == "FORTK") {
+		WhileStatement();
+	}
+	else if (sym == "IFTK") {
+		IfStatement();
+	}
+	// 有无返回值函数调用
+	else if (sym == ) {
+
+
+		if (sym != "SEMICN") error();
+		SaveLex();
+		NextSym();
+	}
+	else if (sym == ) {
+
+
+		if (sym != "SEMICN")  error();
+		SaveLex();
+		NextSym();
+	}
+	else if (Peek(1) == "ASSIGN" || Peek(4) == "ASSIGN" || Peek(7) == "ASSIGN") {
+		AssignStatement();
+		// ;
+		if (sym != "SEMICN")  error();
+		SaveLex();
+		NextSym();
+	}
+	else if (sym == "SCANFTK") {
+		ReadStatement();
+		if (sym != "SEMICN")  error();
+		SaveLex();
+		NextSym();
+	}
+	else if (sym == "PRINTFTK") {
+		WriteStatement();
+		if (sym != "SEMICN")  error();
+		SaveLex();
+		NextSym();
+	}
+	else if (sym == "SWITCHTK") {
+		SwitchStatement();
+	}
+	// 空
+	else if (sym == "SEMICN") {
+		SaveLex();
+		NextSym();
+	}
+	else if (sym == "RETURNTK") {
+		ReturnStatement();
+		if (sym != "SEMICN")  error();
+		SaveLex();
+		NextSym();
+	}
+	else if (sym == "LBRACE") {
+		StatementList();
+		if (sym != "RBRACE")  error();
+		SaveLex();
+		NextSym();
+	}
+}
+
+//＜语句列＞   ::= ｛＜语句＞｝
+void StatementList()
+{
+	while((sym == "WHILETK" ) || (sym == "FORTK") || (sym == "IFTK") || (sym == ""))
+	Statement();
+	SaveGrammer("＜语句列＞");
+}
+
+// ＜复合语句＞   ::=  ［＜常量说明＞］［＜变量说明＞］＜语句列＞ 
+void  CompoundStatement()
+{
+	// 这是常量说明
+	if (sym == "CONSTTK") {
+		ConstantExplanation();
+	}
+	// 这肯定是变量说明，不是： int func()
+	if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK") && (Peek(2) != "LPARENT")) {
+		VariableExplanation();
+	}
+	// 语句列
+	StatementList();
+
+	SaveGrammer("＜复合语句＞");
+}
+// ＜主函数＞    ::= void main‘(’‘)’ ‘{’＜复合语句＞‘}’   
+void MainFunction()
+{
+	// void
+	if (Peek(1) != "MAINTK") error();
+	SaveLex();
+	// main
+	NextSym();
+	SaveLex();
+	//(
+	NextSym();
+	SaveLex();
+	//)
+	NextSym();
+	SaveLex();
+	//{
+	NextSym();
+	SaveLex();
+	//复合语句
+	NextSym();
+	CompoundStatement();
+	//}
+	if (sym != "RBRACE") error();
+	SaveLex();
+
+	SaveGrammer("＜主函数＞");
+	NextSym();
+
+}
+// ＜声明头部＞   ::=  int＜标识符＞ |char＜标识符＞
+void DeclareHead()
+{
+	SaveLex();
+	// 标识符
+	NextSym();
+	SaveLex();
+	SaveGrammer("＜声明头部＞");
+	NextSym();
+}
+
+//＜参数表＞    ::=  ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}| ＜空＞
+void ParameterTable()
+{
+	if (sym == "INTTK" || sym == "CHARTK") {
+		SaveLex();
+		//标识符
+		NextSym();
+		SaveLex();
+		// 
+		NextSym();
+		while (sym == "COMMA") {
+			SaveLex();
+			// 类型标识符
+			NextSym();
+			SaveLex();
+			//标识符
+			NextSym();
+			SaveLex();
+			// 
+			NextSym();
+		}
+	}
+	// else 就是空 ，不用处理，直接输出
+	SaveGrammer("＜参数表＞");
+}
+
+//＜有返回值函数定义＞  ::=  ＜声明头部＞'('＜参数表＞')' '{'＜复合语句＞'}'  
+void FuncDefWithReturn()
+{
+	// 声明头部
+	DeclareHead();
+	// (
+	if (sym != "LPARENT") error();
+	SaveLex();
+	// 参数表
+	NextSym();
+	ValueParameterTable();
+	//)
+	if (sym != "RPARENT") error();
+	SaveLex();
+
+	// {
+	NextSym();
+	SaveLex();
+
+	// 复合语句
+	NextSym();
+	CompoundStatement();
+	//}
+	if (sym != "RBRACE") error();
+	SaveLex();
+
+	SaveGrammer("＜无返回值函数定义＞");
+	NextSym();
+}
+
+// ＜无返回值函数定义＞  ::= void＜标识符＞'('＜参数表＞')''{'＜复合语句＞'}'
+void FuncDefWithoutReturn()
+{
+	if (sym != "VOIDTK") error();
+	SaveLex();
+	// 标识符
+	NextSym();
+	SaveLex();
+	// (
+	NextSym();
+	SaveLex();
+	// 参数表
+	NextSym();
+	ValueParameterTable();
+	//}
+	if (sym != "RPARENT") error();
+	SaveLex();
+
+	// {
+	NextSym();
+	SaveLex();
+
+	// 复合语句
+	NextSym();
+	CompoundStatement();
+	//}
+	if (sym != "RBRACE") error();
+	SaveLex();
+
+	SaveGrammer("＜无返回值函数定义＞");
+	NextSym();
+}
+
+// ＜程序＞    ::= ［＜常量说明＞］［＜变量说明＞］{＜有返回值函数定义＞|＜无返回值函数定义＞}＜主函数＞ 
+void Program()
+{
+
+}
+
 // 输出到文件
 void Output2File()
 {
@@ -165,141 +863,6 @@ void Output2File()
 	}
 }
 
-
-// ＜常量＞   ::=  ＜整数＞|＜字符＞
-void Constant()
-{
-	if (sym == "CHARTK") {
-		SaveLex();
-	}
-	else {
-		Integer();
-	}
-}
-//＜变量定义及初始化＞  ::= ＜类型标识符＞＜标识符＞=＜常量＞|＜类型标识符＞＜标识符＞'['＜无符号整数＞']'='{'＜常量＞{,＜常量＞}'}'|＜类型标识符＞＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']'='{''{'＜常量＞{,＜常量＞}'}'{, '{'＜常量＞{,＜常量＞}'}'}'}'
-void VariableInitialized()
-{
-	SaveLex(); // 保存 = 
-	//
-	NextSym();
-
-	if (sym == "LBRACE") {
-		SaveLex(); // {
-
-		// { {c,... } , {}}
-		NextSym();
-
-		if (sym == "LBRACE") {
-			SaveLex(); // {
-			//常量
-			NextSym();
-			Constant();
-			// ，
-			while (sym == "COMMA") {
-				SaveLex();
-				Constant();
-			}
-			// }
-			if (sym != "RBRACE") error();
-			SaveLex();
-
-			while (sym == "COMMA") {
-				SaveLex();
-			
-				// {
-				NextSym();
-				SaveLex();
-
-				// 常量
-				NextSym();
-				Constant();
-
-				while (sym == "COMMA") {
-					SaveLex();
-					Constant();
-				}
-				// }
-				if (sym != "RBRACE") error();
-				SaveLex();
-			}
-		}
-		// {c...}
-		else {
-			Constant();
-			while (sym == "COMMA") {
-				SaveLex();
-				//常量
-				NextSym();
-				Constant();
-			}
-		}
-		if (sym != "RBRACE") error();
-		SaveLex();
-		NextSym();
-	}
-	else {
-		Constant();
-	}
-	SaveGrammer("＜变量定义及初始化＞");
-}
-// ＜变量定义无初始化＞  ::= ＜类型标识符＞(＜标识符＞|＜标识符＞'['＜无符号整数＞']'|＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']'){,(＜标识符＞|＜标识符＞'['＜无符号整数＞']'|＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']' )}
-void VariableUninitialized()
-{
-	
-	SaveGrammer("＜变量定义无初始化＞");
-	//NextSym();
-}
-//＜变量定义＞ ::= ＜变量定义无初始化＞|＜变量定义及初始化＞
-void VariableDefinition()
-{
-	SaveLex(); // 类型标识符
-
-	NextSym();
-	SaveLex(); // 标识符
-
-	// 前面是提取左因子
-	NextSym();
-	
-
-	if (sym == "LBRACK") {
-		while (sym == "LBRACK") {
-			SaveLex();
-
-			// 无符号整数
-			NextSym();
-			IntegerWithoutSign();
-			// 
-			if (sym != "RBRACK") error();
-			SaveLex();
-
-			NextSym();
-		}
-	}
-	// 下一个是等号的话，就是有初始化，否则无初始化
-	if (sym == "ASSIGN") {
-		VariableInitialized();
-	}
-	else {
-		VariableUninitialized();
-	}
-	SaveGrammer("<变量定义>");
-}
-//＜变量说明＞  ::= ＜变量定义＞;{＜变量定义＞;} 
-// 因为变量定义和声明头部前面几个一样，所以需要区分
-void VariableExplanation()
-{
-	VariableDefinition();
-	while (sym == "SEMICN") {
-		SaveLex();
-		NextSym();
-		//＜变量定义＞
-		if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK" ) && (Peek(2) != "LPARENT"))
-		VariableDefinition();
-	}
-	SaveGrammer("<变量说明>");
-}
-
-// 
 int main()
 {
 	// 读文件
