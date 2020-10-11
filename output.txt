@@ -1,3 +1,27 @@
+CONSTTK coNst
+INTTK int
+IDENFR cONst1
+ASSIGN =
+INTCON 001
+<无符号整数>
+<整数>
+COMMA ,
+IDENFR const2
+ASSIGN =
+MINU -
+INTCON 100
+<无符号整数>
+<整数>
+<常量定义>
+SEMICN ;
+CONSTTK const
+CHARTK char
+IDENFR const3
+ASSIGN =
+CHARCON _
+<常量定义>
+SEMICN ;
+<常量说明>
 INTTK int
 IDENFR change1
 ＜变量定义无初始化＞
@@ -9,3 +33,12 @@ IDENFR change3
 <变量定义>
 SEMICN ;
 <变量说明>
+INTTK int
+IDENFR gets1
+LPARENT (
+INTTK int
+IDENFR var1
+＜语句列＞
+＜复合语句＞
+COMMA ,
+＜主函数＞

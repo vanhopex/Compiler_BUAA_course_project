@@ -2,6 +2,7 @@
 #include "work2.h"
 #include "work3.h"
 using namespace std;
+
 // 查看下一个单词和类别码
 void NextSym()
 {
@@ -287,12 +288,48 @@ void ConstantExplanation()
 //＜字符串＞   ::=  "｛十进制编码为32,33,35-126的ASCII字符｝"
 void StringG()
 {
+	SaveLex();
 
+	SaveGrammer("＜字符串＞");
+	NextSym();
 }
 // ＜因子＞    ::= ＜标识符＞｜＜标识符＞'['＜表达式＞']'|＜标识符＞'['＜表达式＞']''['＜表达式＞']'|'('＜表达式＞')'｜＜整数＞|＜字符＞｜＜有返回值函数调用语句＞    
 void Factor()
 {
+	if (sym == "INTCON") {
+		Integer();
+	}
+	else if (sym == "CHARCON") {
+		SaveLex();
+		NextSym();
+	}
+	// （
+	else if (Peek(1) == "LPARENT") {
+		FunctionWithReturn();
+	}
+	// 标识符
+	else {
+		SaveLex();
+		//
+		NextSym();
+		//[
+		if (sym == "LBRACK") {
+			// [
+			while (sym == "LBRACK") {
+				SaveLex();
 
+				//  表达式
+				NextSym();
+				Expression();
+				// ]
+				if (sym != "RBRACK") error();
+				SaveLex();
+				// [
+				NextSym();
+			}
+		}
+	}
+	SaveGrammer("＜因子＞");
 }
 // ＜项＞     ::= ＜因子＞{＜乘法运算符＞＜因子＞}   
 void Term()
@@ -343,7 +380,30 @@ void ReadStatement()
 //＜写语句＞    ::= printf '(' ＜字符串＞,＜表达式＞ ')'| printf '('＜字符串＞ ')'| printf '('＜表达式＞')' 
 void WriteStatement()
 {
+	if (sym != "PRINTFTK") error();
+	SaveLex();
+	// (
+	NextSym();
+	SaveLex();
+	//
+	NextSym();
+	if (sym == "STRCON") {
+		StringG();
+		if (sym == "COMMA") {
+			SaveLex();
+			// 表达式
+			NextSym();
+			Expression();
+		}
+	}
+	else {
+		Expression();
+	}
+	if (sym != "RPARENT") error();
+	SaveLex();
 
+	SaveGrammer("＜写语句＞");
+	NextSym();
 }
 
 //＜缺省＞   ::=  default :＜语句＞ 
@@ -482,6 +542,7 @@ void ValueParameterTable()
 void FunctionWithReturn()
 {
 	SaveLex();
+	defType[word] = true;
 	// (
 	NextSym();
 	SaveLex();
@@ -489,7 +550,7 @@ void FunctionWithReturn()
 	NextSym();
 	ValueParameterTable();
 	//)
-	if (sym != ")") error();
+	if (sym != "RPARENT") error();
 	SaveLex();
 	SaveGrammer("＜有返回值函数调用语句＞");
 	NextSym();
@@ -498,6 +559,7 @@ void FunctionWithReturn()
 void FunctionWithoutReturn()
 {
 	SaveLex();
+	defType[word] = false;
 	// (
 	NextSym();
 	SaveLex();
@@ -505,7 +567,7 @@ void FunctionWithoutReturn()
 	NextSym();
 	ValueParameterTable();
 	//)
-	if (sym != ")") error();
+	if (sym != "RPARENT") error();
 	SaveLex();
 	SaveGrammer("＜无返回值函数调用语句＞");
 	NextSym();
@@ -629,27 +691,37 @@ void WhileStatement()
 //＜语句＞    ::= ＜循环语句＞｜＜条件语句＞| ＜有返回值函数调用语句＞;  |＜无返回值函数调用语句＞;｜＜赋值语句＞;｜＜读语句＞;｜＜写语句＞;｜＜情况语句＞｜＜空＞;|＜返回语句＞; | '{'＜语句列＞'}'    
 void Statement()
 {
+
+	
+
 	if (sym == "WHILETK" || sym == "FORTK") {
 		WhileStatement();
 	}
 	else if (sym == "IFTK") {
 		IfStatement();
 	}
-	// 有无返回值函数调用
-	else if (sym == ) {
+	// 有无返回值函数调用///////////////////要把所有函数的标识符都存起来/////这里用wordx判断//////////////
+	else if (Peek(1) == "LPARENT" ) {
 
+		map<string, bool>::iterator iter;
+		iter = defType.find(word);
+		if (iter == defType.end()) error();
+		else {
+			// 有
+			if (iter->second == true) {
+				FuncDefWithReturn();
+			}
+			// 无返回
+			else {
+				FuncDefWithoutReturn();
+			}
+		}
 
 		if (sym != "SEMICN") error();
 		SaveLex();
 		NextSym();
 	}
-	else if (sym == ) {
 
-
-		if (sym != "SEMICN")  error();
-		SaveLex();
-		NextSym();
-	}
 	else if (Peek(1) == "ASSIGN" || Peek(4) == "ASSIGN" || Peek(7) == "ASSIGN") {
 		AssignStatement();
 		// ;
@@ -847,7 +919,22 @@ void FuncDefWithoutReturn()
 // ＜程序＞    ::= ［＜常量说明＞］［＜变量说明＞］{＜有返回值函数定义＞|＜无返回值函数定义＞}＜主函数＞ 
 void Program()
 {
-
+	if (sym == "CONSTTK") {
+		ConstantExplanation();
+	}
+	if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK") && (Peek(2) != "LPARENT")) {
+		VariableExplanation();
+	}
+	//
+	while ((Peek(2) != "LPARENT")) {
+		if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK") && (Peek(2) != "LPARENT")) {
+			FuncDefWithReturn();
+		}
+		else {
+			FuncDefWithoutReturn();
+		}
+	}
+	MainFunction();
 }
 
 // 输出到文件
@@ -872,7 +959,7 @@ int main()
 
 	//常量说明
 	NextSym();
-	VariableExplanation();
+	Program();
 
 	// 输出到文件
 	Output2File();

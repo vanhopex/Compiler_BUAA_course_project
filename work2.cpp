@@ -147,52 +147,52 @@ void reserver()
 	}
 
 	if (strcmp(t, "const") == 0) {
-		strcpy_s(symbol, "CONSTTK");
+		strcpy(symbol, "CONSTTK");
 	}
 	else if (strcmp(t, "int") == 0) {
-		strcpy_s(symbol, "INTTK");
+		strcpy(symbol, "INTTK");
 	}
 	else if (strcmp(t, "char") == 0) {
-		strcpy_s(symbol, "CHARTK");
+		strcpy(symbol, "CHARTK");
 	}
 	else if (strcmp(t, "void") == 0) {
-		strcpy_s(symbol, "VOIDTK");
+		strcpy(symbol, "VOIDTK");
 	}
 	else if (strcmp(t, "main") == 0) {
-		strcpy_s(symbol, "MAINTK");
+		strcpy(symbol, "MAINTK");
 	}
 	else if (strcmp(t, "if") == 0) {
-		strcpy_s(symbol, "IFTK");
+		strcpy(symbol, "IFTK");
 	}
 	else if (strcmp(t, "else") == 0) {
-		strcpy_s(symbol, "ELSETK");
+		strcpy(symbol, "ELSETK");
 	}
 	else if (strcmp(t, "switch") == 0) {
-		strcpy_s(symbol, "SWITCHTK");
+		strcpy(symbol, "SWITCHTK");
 	}
 	else if (strcmp(t, "case") == 0) {
-		strcpy_s(symbol, "CASETK");
+		strcpy(symbol, "CASETK");
 	}
 	else if (strcmp(t, "default") == 0) {
-		strcpy_s(symbol, "DEFAULTTK");
+		strcpy(symbol, "DEFAULTTK");
 	}
 	else if (strcmp(t, "while") == 0) {
-		strcpy_s(symbol, "WHILETK");
+		strcpy(symbol, "WHILETK");
 	}
 	else if (strcmp(t, "for") == 0) {
-		strcpy_s(symbol, "FORTK");
+		strcpy(symbol, "FORTK");
 	}
 	else if (strcmp(t, "scanf") == 0) {
-		strcpy_s(symbol, "SCANFTK");
+		strcpy(symbol, "SCANFTK");
 	}
 	else if (strcmp(t, "printf") == 0) {
-		strcpy_s(symbol, "PRINTFTK");
+		strcpy(symbol, "PRINTFTK");
 	}
 	else if (strcmp(t, "return") == 0) {
-		strcpy_s(symbol, "RETURNTK");
+		strcpy(symbol, "RETURNTK");
 	}
 	else {
-		strcpy_s(symbol, "IDENFR");
+		strcpy(symbol, "IDENFR");
 	}
 }
 
@@ -228,12 +228,12 @@ void getsym()
 		
 		retract();
 
-		strcpy_s(symbol, "INTCON");
+		strcpy(symbol, "INTCON");
 	}
 	
 	else if (isColon()) {
 		catToken();
-		strcpy_s(symbol, "COLON");
+		strcpy(symbol, "COLON");
 	}
 
 	else if (isEqu()) {
@@ -243,10 +243,10 @@ void getsym()
 		
 		if (isEqu()) {
 			catToken();
-			strcpy_s(symbol, "EQL");
+			strcpy(symbol, "EQL");
 		}
 		else {
-			strcpy_s(symbol, "ASSIGN");
+			strcpy(symbol, "ASSIGN");
 			retract(); // error 2: 这里要回退一个字符 
 		}	
 	}
@@ -257,11 +257,11 @@ void getsym()
 		getChar(); // 再读入一个字符 
 		if (isEqu()) { // <=
 			catToken();
-			strcpy_s(symbol, "LEQ"); 
+			strcpy(symbol, "LEQ"); 
 		}
 		else {
 			retract(); // 回退一个字符，这个字符现在没有catToken
-			strcpy_s(symbol, "LSS");
+			strcpy(symbol, "LSS");
 		}
 	}
 	
@@ -271,11 +271,11 @@ void getsym()
 		getChar(); // 再读入一个字符 
 		if (isEqu()) { // >=
 			catToken();
-			strcpy_s(symbol, "GEQ"); 
+			strcpy(symbol, "GEQ"); 
 		}
 		else {
 			retract(); // 回退一个字符，这个字符现在没有catToken
-			strcpy_s(symbol, "GRE");
+			strcpy(symbol, "GRE");
 		}
 	}
 	
@@ -283,61 +283,61 @@ void getsym()
 		catToken();
 		getChar(); // 肯定是=， 不然报错
 		catToken();
-		strcpy_s(symbol, "NEQ"); 
+		strcpy(symbol, "NEQ"); 
 	}
 	else if (isPlus()) {
 		catToken();
-		strcpy_s(symbol, "PLUS");
+		strcpy(symbol, "PLUS");
 	}
 	else if (isMinu()) {
 		catToken();
-		strcpy_s(symbol, "MINU");
+		strcpy(symbol, "MINU");
 	}
 	else if (isDiv()) {
 		catToken();
-		strcpy_s(symbol, "DIV");
+		strcpy(symbol, "DIV");
 	}
 	else if (isMult()) {
 		catToken();
-		strcpy_s(symbol, "MULT");
+		strcpy(symbol, "MULT");
 	}
 	else if (isLparent()) {
 		catToken();
-		strcpy_s(symbol, "LPARENT");
+		strcpy(symbol, "LPARENT");
 	}
 	else if (isRparent()) {
 		catToken();
-		strcpy_s(symbol, "RPARENT");
+		strcpy(symbol, "RPARENT");
 	}
 	else if (isLbrace()) {
 		catToken();
-		strcpy_s(symbol, "LBRACE");
+		strcpy(symbol, "LBRACE");
 	}
 	else if (isRbrace()) {
 		catToken();
-		strcpy_s(symbol, "RBRACE");
+		strcpy(symbol, "RBRACE");
 	}
 	else if (isLbrack()) {
 		catToken();
-		strcpy_s(symbol, "LBRACK");
+		strcpy(symbol, "LBRACK");
 	}
 	else if (isRbrack()) {
 		catToken();
-		strcpy_s(symbol, "RBRACK");
+		strcpy(symbol, "RBRACK");
 	}
 	else if (isSemicn()) {
 		catToken();
-		strcpy_s(symbol, "SEMICN");
+		strcpy(symbol, "SEMICN");
 	}
 	else if (isComma()) {
 		catToken();
-		strcpy_s(symbol, "COMMA");
+		strcpy(symbol, "COMMA");
 	}
 	else if (isSinQuo()){
 //		catToken();
 		getChar();
 		catToken();
-		strcpy_s(symbol, "CHARCON");
+		strcpy(symbol, "CHARCON");
 		getChar();
 	}
 	else if (isDouQuo()) {
@@ -346,7 +346,7 @@ void getsym()
 			catToken();
 			getChar();
 		}
-		strcpy_s(symbol, "STRCON");
+		strcpy(symbol, "STRCON");
 	}
 }
 
@@ -362,7 +362,7 @@ void ReadFiles()
 	}
 
 	while (fgets(buffer, MAX_LINE, fp) != NULL) {
-		strcat_s(text, buffer);
+		strcat(text, buffer);
 	}
 }
 
@@ -375,7 +375,7 @@ void CloseFiles()
 
 void error()
 {
-	cout << "there is an error in line：" << endl;
+	cout << "there is an error in line" << endl;
 }
 
 void work2()

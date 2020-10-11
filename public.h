@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdio>
 #include <string>
+#include <map>
 extern char text[10000]; // save the source code read from the testfile.txt
 extern char token[1000]; // global, save the current string
 extern char symbol[10];
@@ -31,4 +32,5 @@ extern std::string word;
 extern int symcur;
 extern struct Item grammer[10000];
 extern int grammerl;
+extern std::map<std::string, bool> defType;
 #endif
