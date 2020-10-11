@@ -1,24 +1,11 @@
-CONSTTK coNst
 INTTK int
-IDENFR cONst1
-ASSIGN =
-INTCON 001
-<无符号整数>
-<整数>
-COMMA ,
-IDENFR const2
-ASSIGN =
-MINU -
-INTCON 100
-<无符号整数>
-<整数>
-<常量定义>
+IDENFR change1
+＜变量定义无初始化＞
+<变量定义>
 SEMICN ;
-CONSTTK const
 CHARTK char
-IDENFR const3
-ASSIGN =
-CHARCON _
-<常量定义>
+IDENFR change3
+＜变量定义无初始化＞
+<变量定义>
 SEMICN ;
-<常量说明>
+<变量说明>

@@ -12,6 +12,12 @@ void NextSym()
 		symcur++;
 	}
 }
+
+// 查看当前单词开始后面第k个单词的类别码
+string Peek(int k)
+{
+	return s[symcur + k - 1].symbolx;
+}
 // 保存词法分析
 void SaveLex()
 {
@@ -20,7 +26,6 @@ void SaveLex()
 	grammer[grammerl].grammerx = "";
 	grammerl++;
 }
-
 // 保存语法分析结果
 void SaveGrammer(string s)
 {
@@ -29,8 +34,14 @@ void SaveGrammer(string s)
 	grammer[grammerl].wordx = "";
 	grammerl++;
 }
-
-
+//无符号整数
+void IntegerWithoutSign()
+{
+	SaveLex(); // 保存无符号整数
+	SaveGrammer("<无符号整数>");
+	NextSym();
+}
+// 整数
 void Integer()
 {
 	if (sym == "PLUS" || sym == "MINU") { 
@@ -39,14 +50,12 @@ void Integer()
 		// 无符号整数
 		NextSym(); 
 	}
-	SaveLex(); // 保存无符号整数
+	IntegerWithoutSign();// 这里调用NextSym();
 
-	SaveGrammer("<无符号整数>");
+	// 由于IntegerWithoutSign()调用的NextSym()这里没有用到，就直接返回给上一层了，所以这里不需要再次NextSym()
 	SaveGrammer("<整数>");
-
-	NextSym();
+	/*NextSym();*/
 }
-
 // 常量定义
 //＜常量定义＞   :: = int＜标识符＞＝＜整数＞{ ,＜标识符＞＝＜整数＞ }
 //                  | char＜标识符＞＝＜字符＞{ ,＜标识符＞＝＜字符＞
@@ -122,9 +131,7 @@ void ConstantDefinition()
 	SaveGrammer("<常量定义>"); 
 	// 上面两个while已经调用了一次 NextSym()
 }
-
-
-// 常量说明
+// ＜常量说明＞ ::=  const＜常量定义＞;{ const＜常量定义＞;}
 void ConstantExplanation()
 {
 	// const
@@ -145,7 +152,7 @@ void ConstantExplanation()
 	}
 	SaveGrammer("<常量说明>");
 }
-
+// 输出到文件
 void Output2File()
 {
 	for (int i = 0; i < grammerl; i++) {
@@ -159,6 +166,140 @@ void Output2File()
 }
 
 
+// ＜常量＞   ::=  ＜整数＞|＜字符＞
+void Constant()
+{
+	if (sym == "CHARTK") {
+		SaveLex();
+	}
+	else {
+		Integer();
+	}
+}
+//＜变量定义及初始化＞  ::= ＜类型标识符＞＜标识符＞=＜常量＞|＜类型标识符＞＜标识符＞'['＜无符号整数＞']'='{'＜常量＞{,＜常量＞}'}'|＜类型标识符＞＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']'='{''{'＜常量＞{,＜常量＞}'}'{, '{'＜常量＞{,＜常量＞}'}'}'}'
+void VariableInitialized()
+{
+	SaveLex(); // 保存 = 
+	//
+	NextSym();
+
+	if (sym == "LBRACE") {
+		SaveLex(); // {
+
+		// { {c,... } , {}}
+		NextSym();
+
+		if (sym == "LBRACE") {
+			SaveLex(); // {
+			//常量
+			NextSym();
+			Constant();
+			// ，
+			while (sym == "COMMA") {
+				SaveLex();
+				Constant();
+			}
+			// }
+			if (sym != "RBRACE") error();
+			SaveLex();
+
+			while (sym == "COMMA") {
+				SaveLex();
+			
+				// {
+				NextSym();
+				SaveLex();
+
+				// 常量
+				NextSym();
+				Constant();
+
+				while (sym == "COMMA") {
+					SaveLex();
+					Constant();
+				}
+				// }
+				if (sym != "RBRACE") error();
+				SaveLex();
+			}
+		}
+		// {c...}
+		else {
+			Constant();
+			while (sym == "COMMA") {
+				SaveLex();
+				//常量
+				NextSym();
+				Constant();
+			}
+		}
+		if (sym != "RBRACE") error();
+		SaveLex();
+		NextSym();
+	}
+	else {
+		Constant();
+	}
+	SaveGrammer("＜变量定义及初始化＞");
+}
+// ＜变量定义无初始化＞  ::= ＜类型标识符＞(＜标识符＞|＜标识符＞'['＜无符号整数＞']'|＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']'){,(＜标识符＞|＜标识符＞'['＜无符号整数＞']'|＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']' )}
+void VariableUninitialized()
+{
+	
+	SaveGrammer("＜变量定义无初始化＞");
+	//NextSym();
+}
+//＜变量定义＞ ::= ＜变量定义无初始化＞|＜变量定义及初始化＞
+void VariableDefinition()
+{
+	SaveLex(); // 类型标识符
+
+	NextSym();
+	SaveLex(); // 标识符
+
+	// 前面是提取左因子
+	NextSym();
+	
+
+	if (sym == "LBRACK") {
+		while (sym == "LBRACK") {
+			SaveLex();
+
+			// 无符号整数
+			NextSym();
+			IntegerWithoutSign();
+			// 
+			if (sym != "RBRACK") error();
+			SaveLex();
+
+			NextSym();
+		}
+	}
+	// 下一个是等号的话，就是有初始化，否则无初始化
+	if (sym == "ASSIGN") {
+		VariableInitialized();
+	}
+	else {
+		VariableUninitialized();
+	}
+	SaveGrammer("<变量定义>");
+}
+//＜变量说明＞  ::= ＜变量定义＞;{＜变量定义＞;} 
+// 因为变量定义和声明头部前面几个一样，所以需要区分
+void VariableExplanation()
+{
+	VariableDefinition();
+	while (sym == "SEMICN") {
+		SaveLex();
+		NextSym();
+		//＜变量定义＞
+		if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK" ) && (Peek(2) != "LPARENT"))
+		VariableDefinition();
+	}
+	SaveGrammer("<变量说明>");
+}
+
+// 
 int main()
 {
 	// 读文件
@@ -168,7 +309,7 @@ int main()
 
 	//常量说明
 	NextSym();
-	ConstantExplanation();
+	VariableExplanation();
 
 	// 输出到文件
 	Output2File();
