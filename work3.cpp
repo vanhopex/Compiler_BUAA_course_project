@@ -348,7 +348,7 @@ void Expression()
 		SaveLex();
 		NextSym();
 	}
-
+	Term(); /*BUG3: +-之后应该是一个项，这里忘记写了*/
 	while (sym == "PLUS" || sym == "MINU") {
 		SaveLex();
 		NextSym();
@@ -479,9 +479,8 @@ void AssignStatement()
 {
 	// 标识符
 	SaveLex();
-	// 
-	NextSym();
 	// [
+	NextSym();
 	if (sym == "LBRACK") {
 		// [
 		while (sym == "LBRACK") {
@@ -502,6 +501,7 @@ void AssignStatement()
 	if (sym != "ASSIGN") error();
 
 	SaveLex();
+	NextSym(); /*BUG4：进表达式之前忘记读取下一个字符了*/
 	Expression();
 
 	SaveGrammer("＜赋值语句＞");
@@ -515,12 +515,15 @@ void ReturnStatement()
 	NextSym();
 	if (sym == "LPARENT") {
 		SaveLex();
+		NextSym(); /*BUG6: 进表达式之前又忘记取下一个字符了*/
 		Expression();
 		//)
 		if (sym != "RPARENT") error();
 		SaveLex();
 		NextSym();
 	}
+	else error();
+	SaveGrammer("＜返回语句＞"); /*BUG5: 这里没写！*/
 }
 
 //＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}｜＜空＞
@@ -533,6 +536,7 @@ void ValueParameterTable()
 		// ,
 		while (sym == "COMMA") {
 			SaveLex();
+			NextSym(); /*BUG7:进表达式之前又忘记调用了*/ 
 			Expression();
 		}
 	}
@@ -692,34 +696,11 @@ void WhileStatement()
 void Statement()
 {
 
-	
-
 	if (sym == "WHILETK" || sym == "FORTK") {
 		WhileStatement();
 	}
 	else if (sym == "IFTK") {
 		IfStatement();
-	}
-	// 有无返回值函数调用///////////////////要把所有函数的标识符都存起来/////这里用wordx判断//////////////
-	else if (Peek(1) == "LPARENT" ) {
-
-		map<string, bool>::iterator iter;
-		iter = defType.find(word);
-		if (iter == defType.end()) error();
-		else {
-			// 有
-			if (iter->second == true) {
-				FuncDefWithReturn();
-			}
-			// 无返回
-			else {
-				FuncDefWithoutReturn();
-			}
-		}
-
-		if (sym != "SEMICN") error();
-		SaveLex();
-		NextSym();
 	}
 
 	else if (Peek(1) == "ASSIGN" || Peek(4) == "ASSIGN" || Peek(7) == "ASSIGN") {
@@ -756,18 +737,54 @@ void Statement()
 		NextSym();
 	}
 	else if (sym == "LBRACE") {
+		SaveLex();/*BUG2：这里要先将{存起来在调用StatementList,不然死循环了！！！*/
 		StatementList();
 		if (sym != "RBRACE")  error();
 		SaveLex();
 		NextSym();
 	}
+	/*else {
+
+	}*/
+	// 有无返回值函数调用///////////////////要把所有函数的标识符都存起来/////这里用wordx判断//////////////这里写的不够好！！
+	else if (Peek(1) == "LPARENT" ) {
+
+		map<string, bool>::iterator iter;
+		iter = defType.find(word);
+		if (iter == defType.end()) error();
+		else {
+			// 有
+			if (iter->second == true) {
+				FuncDefWithReturn();
+			}
+			// 无返回
+			else {
+				FuncDefWithoutReturn();
+			}
+		}
+
+		if (sym != "SEMICN") error();
+		SaveLex();
+		NextSym();
+	}
+
+	SaveGrammer("<语句>");
+
 }
 
 //＜语句列＞   ::= ｛＜语句＞｝
 void StatementList()
 {
-	while((sym == "WHILETK" ) || (sym == "FORTK") || (sym == "IFTK") || (sym == ""))
-	Statement();
+	while ((sym == "WHILETK") || (sym == "FORTK") || (sym == "IFTK") || (sym == "SEMICN") || (sym == "RETURNTK")
+		|| (sym == "SCANFTK") || (sym == "PRINTFTK") || (sym == "SWITCHTK") || (sym == "LBRACE") || (Peek(1) == "LPARENT")
+		|| ((Peek(1) == "ASSIGN" || Peek(4) == "ASSIGN") || (Peek(7) == "ASSIGN"))) {
+		Statement();
+	}
+	/*BUG1:这里没写完整只写了一半*/
+	/*while (sym == "LPARENT") {
+		StatementList();
+	}*/
+	
 	SaveGrammer("＜语句列＞");
 }
 
@@ -863,7 +880,9 @@ void FuncDefWithReturn()
 	SaveLex();
 	// 参数表
 	NextSym();
-	ValueParameterTable();
+
+	//ValueParameterTable();/*BUG0: 看错了定义，这里应该调用的是参数表，不是值参数表*/
+	ParameterTable();
 	//)
 	if (sym != "RPARENT") error();
 	SaveLex();
@@ -879,7 +898,7 @@ void FuncDefWithReturn()
 	if (sym != "RBRACE") error();
 	SaveLex();
 
-	SaveGrammer("＜无返回值函数定义＞");
+	SaveGrammer("＜有返回值函数定义＞");
 	NextSym();
 }
 
@@ -926,8 +945,8 @@ void Program()
 		VariableExplanation();
 	}
 	//
-	while ((Peek(2) != "LPARENT")) {
-		if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK") && (Peek(2) != "LPARENT")) {
+	while ((Peek(2) == "LPARENT") && Peek(1) != "MAINTK") {
+		if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK")) { // 有返回值的函数定义
 			FuncDefWithReturn();
 		}
 		else {
@@ -935,6 +954,8 @@ void Program()
 		}
 	}
 	MainFunction();
+
+	SaveGrammer("<程序>");
 }
 
 // 输出到文件
@@ -960,6 +981,8 @@ int main()
 	//常量说明
 	NextSym();
 	Program();
+	//FuncDefWithReturn();
+	//MainFunction();
 
 	// 输出到文件
 	Output2File();

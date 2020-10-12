@@ -386,7 +386,7 @@ void work2()
 		if (strcmp(symbol, "") != 0) {
 			s[i].symbolx = symbol;
 			s[i].wordx = token;
-			printf("%s %s\n", s[i].symbolx.c_str(), s[i].wordx.c_str());
+			//printf("%s %s\n", s[i].symbolx.c_str(), s[i].wordx.c_str());
 		}
 		i++;
 	}
