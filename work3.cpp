@@ -88,12 +88,14 @@ void VariableInitialized()
 			// ，
 			while (sym == "COMMA") {
 				SaveLex();
+				NextSym(); /*这里又是进入函数之前没有NextSym()*/
 				Constant();
 			}
 			// }
 			if (sym != "RBRACE") error();
 			SaveLex();
 
+			NextSym(); /*又是进入前忘记加了*/ 
 			while (sym == "COMMA") {
 				SaveLex();
 
@@ -107,11 +109,13 @@ void VariableInitialized()
 
 				while (sym == "COMMA") {
 					SaveLex();
+					NextSym(); /*BUG*/
 					Constant();
 				}
 				// }
 				if (sym != "RBRACE") error();
 				SaveLex();
+				NextSym(); /*又是忘记加了*/
 			}
 		}
 		// {c...}
@@ -813,7 +817,7 @@ void StatementList()
 {
 	while ((sym == "WHILETK") || (sym == "FORTK") || (sym == "IFTK") || (sym == "SEMICN") || (sym == "RETURNTK")
 		|| (sym == "SCANFTK") || (sym == "PRINTFTK") || (sym == "SWITCHTK") || (sym == "LBRACE") || (Peek(1) == "LPARENT")
-		|| ((Peek(1) == "ASSIGN" || Peek(4) == "ASSIGN") || (Peek(7) == "ASSIGN"))) {
+		|| ((Peek(1) == "ASSIGN")  || (Peek(4) == "ASSIGN" && Peek(1) == "LBRACK") || (Peek(7) == "ASSIGN" && Peek(4)=="LRRACK"))) {
 		Statement();
 	}
 	/*BUG1:这里没写完整只写了一半*/
