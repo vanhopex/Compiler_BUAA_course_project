@@ -3,6 +3,7 @@
 #include "work3.h"
 using namespace std;
 
+string wordMinu2 = s[symcur - 1].wordx;
 // 查看下一个单词和类别码
 void NextSym()
 {
@@ -583,7 +584,7 @@ void ValueParameterTable()
 void FunctionWithReturn()
 {
 	SaveLex();
-	defType[word] = true;
+	/*BUG*/
 	// (
 	NextSym();
 	SaveLex();
@@ -600,7 +601,6 @@ void FunctionWithReturn()
 void FunctionWithoutReturn()
 {
 	SaveLex();
-	defType[word] = false;
 	// (
 	NextSym();
 	SaveLex();
@@ -795,11 +795,12 @@ void Statement()
 		else {
 			// 有
 			if (iter->second == true) {
-				FuncDefWithReturn();
+				FunctionWithReturn();
 			}
 			// 无返回
 			else {
-				FuncDefWithoutReturn();
+				//FuncDefWithoutReturn();
+				FunctionWithoutReturn(); /*BUG函数调用写成函数定义了*/
 			}
 		}
 
@@ -817,7 +818,7 @@ void StatementList()
 {
 	while ((sym == "WHILETK") || (sym == "FORTK") || (sym == "IFTK") || (sym == "SEMICN") || (sym == "RETURNTK")
 		|| (sym == "SCANFTK") || (sym == "PRINTFTK") || (sym == "SWITCHTK") || (sym == "LBRACE") || (Peek(1) == "LPARENT")
-		|| ((Peek(1) == "ASSIGN")  || (Peek(4) == "ASSIGN" && Peek(1) == "LBRACK") || (Peek(7) == "ASSIGN" && Peek(4)=="LRRACK"))) {
+		|| ((Peek(1) == "ASSIGN")  || (Peek(4) == "ASSIGN" && Peek(1) == "LBRACK") || (Peek(7) == "ASSIGN" && Peek(4)=="LBRACK"))) {
 		Statement();
 	}
 	/*BUG1:这里没写完整只写了一半*/
@@ -880,6 +881,7 @@ void DeclareHead()
 	// 标识符
 	NextSym();
 	SaveLex();
+	defType[word] = true;
 	SaveGrammer("<声明头部>");
 	NextSym();
 }
@@ -892,6 +894,7 @@ void ParameterTable()
 		//标识符
 		NextSym();
 		SaveLex();
+		defType[word] = true;
 		// 
 		NextSym();
 		while (sym == "COMMA") {
@@ -915,6 +918,7 @@ void FuncDefWithReturn()
 {
 	// 声明头部
 	DeclareHead();
+	
 	// (
 	if (sym != "LPARENT") error();
 	SaveLex();
@@ -950,6 +954,7 @@ void FuncDefWithoutReturn()
 	// 标识符
 	NextSym();
 	SaveLex();
+	defType[word] = false;
 	// (
 	NextSym();
 	SaveLex();
