@@ -4,3 +4,5 @@ work3.sln
 work3.vcxproj
 work3.vcxproj.filters
 work3.vcxproj.user
+testfile*.txt
+output*.txt

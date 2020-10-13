@@ -58,12 +58,14 @@ void Integer()
 // ＜常量＞   ::=  ＜整数＞|＜字符＞
 void Constant()
 {
-	if (sym == "CHARTK") {
+	if (sym == "CHARCON") {
 		SaveLex();
+		NextSym(); /*BUG:忘记加了*/
 	}
 	else {
 		Integer();
 	}
+	SaveGrammer("<常量>");
 }
 //＜变量定义及初始化＞  ::= ＜类型标识符＞＜标识符＞=＜常量＞|＜类型标识符＞＜标识符＞'['＜无符号整数＞']'='{'＜常量＞{,＜常量＞}'}'|＜类型标识符＞＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']'='{''{'＜常量＞{,＜常量＞}'}'{, '{'＜常量＞{,＜常量＞}'}'}'}'
 void VariableInitialized()
@@ -129,13 +131,34 @@ void VariableInitialized()
 	else {
 		Constant();
 	}
-	SaveGrammer("＜变量定义及初始化＞");
+	SaveGrammer("<变量定义及初始化>");
 }
 // ＜变量定义无初始化＞  ::= ＜类型标识符＞(＜标识符＞|＜标识符＞'['＜无符号整数＞']'|＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']'){,(＜标识符＞|＜标识符＞'['＜无符号整数＞']'|＜标识符＞'['＜无符号整数＞']''['＜无符号整数＞']' )}
 void VariableUninitialized()
 {
+	while (sym == "COMMA") {
+		SaveLex();
+		//
+		NextSym();
+		SaveLex(); // 标识符
 
-	SaveGrammer("＜变量定义无初始化＞");
+		NextSym();
+		if (sym == "LBRACK") {
+			while (sym == "LBRACK") {
+				SaveLex();
+
+				// 无符号整数
+				NextSym();
+				IntegerWithoutSign();
+				// 
+				if (sym != "RBRACK") error();
+				SaveLex();
+
+				NextSym();
+			}
+		}
+	}
+	SaveGrammer("<变量定义无初始化>");
 	//NextSym();
 }
 //＜变量定义＞ ::= ＜变量定义无初始化＞|＜变量定义及初始化＞
@@ -290,7 +313,7 @@ void StringG()
 {
 	SaveLex();
 
-	SaveGrammer("＜字符串＞");
+	SaveGrammer("<字符串>");
 	NextSym();
 }
 // ＜因子＞    ::= ＜标识符＞｜＜标识符＞'['＜表达式＞']'|＜标识符＞'['＜表达式＞']''['＜表达式＞']'|'('＜表达式＞')'｜＜整数＞|＜字符＞｜＜有返回值函数调用语句＞    
@@ -300,6 +323,15 @@ void Factor()
 		Integer();
 	}
 	else if (sym == "CHARCON") {
+		SaveLex();
+		NextSym();
+	}
+	else if (sym == "LPARENT") {
+		SaveLex();
+		//
+		NextSym();
+		Expression();
+		if (sym != "RPARENT") error();
 		SaveLex();
 		NextSym();
 	}
@@ -329,7 +361,7 @@ void Factor()
 			}
 		}
 	}
-	SaveGrammer("＜因子＞");
+	SaveGrammer("<因子>");
 }
 // ＜项＞     ::= ＜因子＞{＜乘法运算符＞＜因子＞}   
 void Term()
@@ -337,9 +369,10 @@ void Term()
 	Factor();
 	while (sym == "MULT" || sym == "DIV") {
 		SaveLex();
+		NextSym(); /*BUG: 进函数之前忘记加NextSym()*/
 		Factor();
 	}
-	SaveGrammer("＜项＞");
+	SaveGrammer("<项>");
 }
 //＜表达式＞    ::= ［＋｜－］＜项＞{＜加法运算符＞＜项＞} 
 void Expression()
@@ -354,7 +387,7 @@ void Expression()
 		NextSym();
 		Term();
 	}
-	SaveGrammer("＜表达式＞");
+	SaveGrammer("<表达式>");
 }
 
 // ＜读语句＞    ::=  scanf '('＜标识符＞')' 
@@ -373,7 +406,7 @@ void ReadStatement()
 	SaveLex();
 	// 
 
-	SaveGrammer("＜读语句＞");
+	SaveGrammer("<读语句>");
 	NextSym();
 }
 
@@ -402,7 +435,7 @@ void WriteStatement()
 	if (sym != "RPARENT") error();
 	SaveLex();
 
-	SaveGrammer("＜写语句＞");
+	SaveGrammer("<写语句>");
 	NextSym();
 }
 
@@ -418,7 +451,7 @@ void DefaultStatement()
 	NextSym();
 	Statement();
 
-	SaveGrammer("＜缺省＞");
+	SaveGrammer("<缺省>");
 }
 //＜情况表＞   ::=  ＜情况子语句＞{＜情况子语句＞}   
 void CaseTable()
@@ -426,7 +459,7 @@ void CaseTable()
 	while (sym == "CASETK") {
 		CaseSubStatement();
 	}
-	SaveGrammer("＜情况表＞");
+	SaveGrammer("<情况表>");
 }
 //＜情况子语句＞  ::=  case＜常量＞：＜语句＞   
 void CaseSubStatement()
@@ -442,7 +475,7 @@ void CaseSubStatement()
 	//语句
 	NextSym();
 	Statement();
-	SaveGrammer("＜情况子语句＞");
+	SaveGrammer("<情况子语句>");
 }
 //＜情况语句＞  ::=  switch ‘(’＜表达式＞‘)’ ‘{’＜情况表＞＜缺省＞‘}’  
 void SwitchStatement()
@@ -470,7 +503,7 @@ void SwitchStatement()
 	if (sym != "RBRACE") error();
 	SaveLex();
 
-	SaveGrammer("＜情况语句＞");
+	SaveGrammer("<情况语句>");
 	NextSym();
 }
 
@@ -504,7 +537,7 @@ void AssignStatement()
 	NextSym(); /*BUG4：进表达式之前忘记读取下一个字符了*/
 	Expression();
 
-	SaveGrammer("＜赋值语句＞");
+	SaveGrammer("<赋值语句>");
 }
 //＜返回语句＞   ::=  return['('＜表达式＞')']   
 void ReturnStatement()
@@ -523,7 +556,7 @@ void ReturnStatement()
 		NextSym();
 	}
 	else error();
-	SaveGrammer("＜返回语句＞"); /*BUG5: 这里没写！*/
+	SaveGrammer("<返回语句>"); /*BUG5: 这里没写！*/
 }
 
 //＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}｜＜空＞
@@ -540,7 +573,7 @@ void ValueParameterTable()
 			Expression();
 		}
 	}
-	SaveGrammer("＜值参数表＞");
+	SaveGrammer("<值参数表>");
 }
 //＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'   
 void FunctionWithReturn()
@@ -556,7 +589,7 @@ void FunctionWithReturn()
 	//)
 	if (sym != "RPARENT") error();
 	SaveLex();
-	SaveGrammer("＜有返回值函数调用语句＞");
+	SaveGrammer("<有返回值函数调用语句>");
 	NextSym();
 }
 // ＜无返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
@@ -573,7 +606,7 @@ void FunctionWithoutReturn()
 	//)
 	if (sym != "RPARENT") error();
 	SaveLex();
-	SaveGrammer("＜无返回值函数调用语句＞");
+	SaveGrammer("<无返回值函数调用语句>");
 	NextSym();
 }
 
@@ -582,13 +615,12 @@ void Requirement()
 {
 	Expression();
 	//关系运算符
-	NextSym();
 	SaveLex();
 	//表达式
 	NextSym();
 	Expression();
 
-	SaveGrammer("＜条件＞");
+	SaveGrammer("<条件>");
 }
 
 //＜条件语句＞  ::= if '('＜条件＞')'＜语句＞［else＜语句＞］ 
@@ -616,13 +648,13 @@ void IfStatement()
 		NextSym();
 		Statement();
 	}
-	SaveGrammer("＜条件语句＞");
+	SaveGrammer("<条件语句>");
 }
 //＜步长＞::= ＜无符号整数＞  
 void Ilength()
 {
 	IntegerWithoutSign();
-	SaveGrammer("＜步长＞");
+	SaveGrammer("<步长>");
 }
 
 //＜循环语句＞   ::=  while '('＜条件＞')'＜语句＞| for'('＜标识符＞＝＜表达式＞;＜条件＞;＜标识符＞＝＜标识符＞(+|-)＜步长＞')'＜语句＞ 
@@ -686,11 +718,14 @@ void WhileStatement()
 		// )
 		if (sym != "RPARENT") error();
 		SaveLex();
+		// {
+		//NextSym();
+		//SaveLex(); /*BUG 忘记{*/
 		// 语句
 		NextSym();
 		Statement();
 	}
-	SaveGrammer("＜循环语句＞");
+	SaveGrammer("<循环语句>");
 }
 //＜语句＞    ::= ＜循环语句＞｜＜条件语句＞| ＜有返回值函数调用语句＞;  |＜无返回值函数调用语句＞;｜＜赋值语句＞;｜＜读语句＞;｜＜写语句＞;｜＜情况语句＞｜＜空＞;|＜返回语句＞; | '{'＜语句列＞'}'    
 void Statement()
@@ -703,7 +738,7 @@ void Statement()
 		IfStatement();
 	}
 
-	else if (Peek(1) == "ASSIGN" || Peek(4) == "ASSIGN" || Peek(7) == "ASSIGN") {
+	else if (Peek(1) == "ASSIGN" || (Peek(4) == "ASSIGN"&&Peek(1) == "LBRACK") ||( Peek(7) == "ASSIGN" && Peek(1) == "LBRACK" && Peek(4) == "LBRACK")) {
 		AssignStatement();
 		// ;
 		if (sym != "SEMICN")  error();
@@ -738,6 +773,7 @@ void Statement()
 	}
 	else if (sym == "LBRACE") {
 		SaveLex();/*BUG2：这里要先将{存起来在调用StatementList,不然死循环了！！！*/
+		NextSym(); /*BUG 这里又忘记加了*/
 		StatementList();
 		if (sym != "RBRACE")  error();
 		SaveLex();
@@ -785,7 +821,7 @@ void StatementList()
 		StatementList();
 	}*/
 	
-	SaveGrammer("＜语句列＞");
+	SaveGrammer("<语句列>");
 }
 
 // ＜复合语句＞   ::=  ［＜常量说明＞］［＜变量说明＞］＜语句列＞ 
@@ -802,7 +838,7 @@ void  CompoundStatement()
 	// 语句列
 	StatementList();
 
-	SaveGrammer("＜复合语句＞");
+	SaveGrammer("<复合语句>");
 }
 // ＜主函数＞    ::= void main‘(’‘)’ ‘{’＜复合语句＞‘}’   
 void MainFunction()
@@ -829,7 +865,7 @@ void MainFunction()
 	if (sym != "RBRACE") error();
 	SaveLex();
 
-	SaveGrammer("＜主函数＞");
+	SaveGrammer("<主函数>");
 	NextSym();
 
 }
@@ -840,7 +876,7 @@ void DeclareHead()
 	// 标识符
 	NextSym();
 	SaveLex();
-	SaveGrammer("＜声明头部＞");
+	SaveGrammer("<声明头部>");
 	NextSym();
 }
 
@@ -867,7 +903,7 @@ void ParameterTable()
 		}
 	}
 	// else 就是空 ，不用处理，直接输出
-	SaveGrammer("＜参数表＞");
+	SaveGrammer("<参数表>");
 }
 
 //＜有返回值函数定义＞  ::=  ＜声明头部＞'('＜参数表＞')' '{'＜复合语句＞'}'  
@@ -898,7 +934,7 @@ void FuncDefWithReturn()
 	if (sym != "RBRACE") error();
 	SaveLex();
 
-	SaveGrammer("＜有返回值函数定义＞");
+	SaveGrammer("<有返回值函数定义>");
 	NextSym();
 }
 
@@ -931,7 +967,7 @@ void FuncDefWithoutReturn()
 	if (sym != "RBRACE") error();
 	SaveLex();
 
-	SaveGrammer("＜无返回值函数定义＞");
+	SaveGrammer("<无返回值函数定义>");
 	NextSym();
 }
 
@@ -983,7 +1019,7 @@ int main()
 	Program();
 	//FuncDefWithReturn();
 	//MainFunction();
-
+	//Statement();
 	// 输出到文件
 	Output2File();
 	// 关闭文件
