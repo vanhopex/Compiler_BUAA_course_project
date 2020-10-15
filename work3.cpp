@@ -21,6 +21,9 @@ string Peek(int k)
 // 保存词法分析
 void SaveLex()
 {
+	/*if (grammerl == 0) {
+		fprintf(out, "%s %s hello\n", sym.c_str(), word.c_str());
+	}*/
 	grammer[grammerl].symbolx = sym;
 	grammer[grammerl].wordx = word;
 	grammer[grammerl].grammerx = "";
@@ -29,6 +32,9 @@ void SaveLex()
 // 保存语法分析结果
 void SaveGrammer(string s)
 {
+	if (grammerl == 0) {
+		fprintf(out, "%s hello\n", s.c_str());
+	}
 	grammer[grammerl].grammerx = s;
 	grammer[grammerl].symbolx = "";
 	grammer[grammerl].wordx = "";
@@ -206,12 +212,13 @@ void VariableDefinition()
 void VariableExplanation()
 {
 	VariableDefinition();
-	while (sym == "SEMICN") {
+	while (sym == "SEMICN") { /*BUG: 如果下一句是空语句这里就会出错*/ 
 		SaveLex();
 		NextSym();
 		//＜变量定义＞
 		if ((Peek(0) == "INTTK" || Peek(0) == "CHARTK") && (Peek(2) != "LPARENT"))
 			VariableDefinition();
+		else break; // 空语句这里就跳出了
 	}
 	SaveGrammer("<变量说明>");
 }
@@ -324,7 +331,7 @@ void StringG()
 // ＜因子＞    ::= ＜标识符＞｜＜标识符＞'['＜表达式＞']'|＜标识符＞'['＜表达式＞']''['＜表达式＞']'|'('＜表达式＞')'｜＜整数＞|＜字符＞｜＜有返回值函数调用语句＞    
 void Factor()
 {
-	if (sym == "INTCON") {
+	if (sym == "INTCON" || sym == "PLUS" || sym == "MINU") { /*BUG 整数的文法没看全*/
 		Integer();
 	}
 	else if (sym == "CHARCON") {
@@ -741,8 +748,8 @@ void Statement()
 	else if (sym == "IFTK") {
 		IfStatement();
 	}
-
-	else if (Peek(1) == "ASSIGN" || (Peek(4) == "ASSIGN"&&Peek(1) == "LBRACK") ||( Peek(7) == "ASSIGN" && Peek(1) == "LBRACK" && Peek(4) == "LBRACK")) {
+	else if ((Peek(1) == "ASSIGN") || (Peek(1) == "LBRACK")) {
+	//else if (Peek(1) == "ASSIGN" || (Peek(4) == "ASSIGN"&&Peek(1) == "LBRACK") ||( Peek(7) == "ASSIGN" && Peek(1) == "LBRACK" && Peek(4) == "LBRACK")) {
 		AssignStatement();
 		// ;
 		if (sym != "SEMICN")  error();
@@ -816,9 +823,10 @@ void Statement()
 //＜语句列＞   ::= ｛＜语句＞｝
 void StatementList()
 {
+	// 赋值语句 a=  a[]=  a[][]=
 	while ((sym == "WHILETK") || (sym == "FORTK") || (sym == "IFTK") || (sym == "SEMICN") || (sym == "RETURNTK")
 		|| (sym == "SCANFTK") || (sym == "PRINTFTK") || (sym == "SWITCHTK") || (sym == "LBRACE") || (Peek(1) == "LPARENT")
-		|| ((Peek(1) == "ASSIGN")  || (Peek(4) == "ASSIGN" && Peek(1) == "LBRACK") || (Peek(7) == "ASSIGN" && Peek(4)=="LBRACK"))) {
+		|| ((Peek(1) == "ASSIGN")  || ( Peek(1) == "LBRACK") )) {
 		Statement();
 	}
 	/*BUG1:这里没写完整只写了一半*/
@@ -960,7 +968,7 @@ void FuncDefWithoutReturn()
 	SaveLex();
 	// 参数表
 	NextSym();
-	ValueParameterTable();
+	ParameterTable(); /*BUG*/ 
 	//}
 	if (sym != "RPARENT") error();
 	SaveLex();
@@ -1006,11 +1014,14 @@ void Program()
 // 输出到文件
 void Output2File()
 {
+	//fprintf(out, "%d\n", grammerl);
 	for (int i = 0; i < grammerl; i++) {
 		if (grammer[i].grammerx == "") {
+			//fprintf(out, "%s %s\n","symbol", "word");
 			fprintf(out, "%s %s\n", grammer[i].symbolx.c_str(), grammer[i].wordx.c_str());
 		}
 		else {
+			//fprintf(out, "%s\n", "grammer");
 			fprintf(out, "%s\n", grammer[i].grammerx.c_str());
 		}
 	}
@@ -1022,6 +1033,10 @@ int main()
 	ReadFiles();
 	// 执行work2
 	work2();
+
+	/*for (int i = 0; i < slength; i++) {
+		fprintf(out, "%s %s\n", s[i].symbolx.c_str(), s[i].wordx.c_str());
+	}*/
 
 	//常量说明
 	NextSym();

@@ -8,7 +8,8 @@ void clearToken()
 }
 bool isSpace()
 {
-	return (tmpChar == ' ' || tmpChar == '\t' || tmpChar == '\n');
+	//return (tmpChar == ' ' || tmpChar == '\t' || tmpChar == '\n');
+	return isspace(tmpChar);
 }
 bool isDigit()
 {
