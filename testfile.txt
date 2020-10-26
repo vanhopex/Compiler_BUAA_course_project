@@ -1,0 +1,7 @@
+const int int_a = 0
+int int_n = 5
+int int_o = -1
+void main()
+{
+  return ;
+}

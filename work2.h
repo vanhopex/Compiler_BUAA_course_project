@@ -1,0 +1,39 @@
+#ifndef __WORK2_
+#define __WORK2_
+#include <string>
+bool isSpace();
+void clearToken();
+bool isDigit();
+bool isPlus();
+bool isDiv();
+bool isMult();
+bool isLess();
+bool isGreater();
+bool isEqu();
+bool isMinu();
+bool isExcla();
+bool isComma();
+bool isSemicn();
+bool isLparent();
+bool isRparent();
+bool isLbrack();
+bool isRbrack();
+bool isLbrace();
+bool isRbrace();
+bool isLetter();
+bool isColon();
+void getChar();
+void retract(); 
+void catToken();
+void reserver();
+bool isSinQuo();
+bool isDouQuo();
+bool isUndLine();
+void getsym();
+void ReadFiles();
+void CloseFiles();
+void error();
+void work2();
+//void output2file(std::string s);
+#endif
+

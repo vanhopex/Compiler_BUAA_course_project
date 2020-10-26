@@ -1,0 +1,8 @@
+/.vs
+/Debug
+/Release
+ErrorHandling.sln
+ErrorHandling.vcxproj
+ErrorHandling.vcxproj.filters
+ErrorHandling.vcxproj.user
+text/d+.zip
