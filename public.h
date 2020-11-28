@@ -53,7 +53,8 @@ extern bool isInFuncDefWithReturn; // 是否在<有返回值函数定义>里面
 extern bool isInFuncDefWithoutReturn; //是否在<无返回值函数定义>里面
 extern bool isInFuncDef; // 是否是在函数声明里面
 struct node {
-	string name;
+	string name; // 变量名/参数名/函数名
+
 	string type; // const or var or func
 	string kind; // int / char / 
 				//  如果是func , with or without
@@ -62,19 +63,28 @@ struct node {
 	//vector<string> paratype;
 	vector<string> parakind;
 	vector<string> paraname;
-	//
+	
+	/*记录变量、常量、参数在栈中的偏移*/
+	/*func的参数同变量一起记录，只不过其type改成para*/
+	int offset;
 };
-//主map: 全局变量/常量 和 main里面的
+
+//主map: 全局变量/常量 
 extern map<string, node> globalTable;
 //函数定义里面的map，用完之后就clear
 extern map<string, node> localTable;
 // 表示现在是在 函数定义 还是 全局变量(包括main)
 extern bool isInFuncDef;
+// 所有局部符号表
+extern map<string, map<string, node>> all_local_tables;
+
+
 void Save2GlobalTable();
 // 将其保存到localtable
 void Save2LocalTable();
 
 void Save2Table();
+
 extern string typeOfExpr;
 extern string typeOfConstant;
 extern string varNameInitialized;

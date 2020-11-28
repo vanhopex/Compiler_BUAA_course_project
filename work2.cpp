@@ -375,10 +375,10 @@ void ReadFiles()
 		printf("Can not open out file!");
 		exit(1);
 	}
-	if ((errorfile = fopen("error.txt", "w+")) == NULL) {
+	/*if ((errorfile = fopen("error.txt", "w+")) == NULL) {
 		printf("Can not open out file!");
 		exit(1);
-	}
+	}*/
 
 	while (fgets(buffer, MAX_LINE, fp) != NULL) {
 		strcat(text, buffer);
@@ -389,13 +389,13 @@ void CloseFiles()
 {
 	fclose(fp);
 	fclose(out);
-	fclose(errorfile);
+	//fclose(errorfile);
 }
 
 
 void error()
 {
-	cout << "there is an error in line: " << gline  << sym << "zhang"<< word << endl;
+	//cout << "there is an error in line: " << gline  << sym << "zhang"<< word << endl;
 }
 
 void work2()

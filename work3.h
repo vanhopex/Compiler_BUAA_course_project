@@ -107,7 +107,5 @@ void Program();
 // 输出到文件
 void Output2File();
 
-int main();
-
 int GetLine();
 #endif // ! __WORK3_

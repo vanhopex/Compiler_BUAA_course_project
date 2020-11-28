@@ -745,7 +745,8 @@ void AssignStatement()
 	SaveLex();
 	NextSym(); /*BUG4：进表达式之前忘记读取下一个字符了*/
 	Expression();
-	cout << typeOfExpr << "  zhang" << endl;
+	//cout << typeOfExpr << "  zhang" << endl;
+
 
 	SaveGrammer("<赋值语句>");
 }
@@ -1216,6 +1217,8 @@ void MainFunction()
 	NextSym();
 
 	isInFuncDef = false;
+	//
+	all_local_tables["main"] = localTable;
 	localTable.clear();
 }
 // ＜声明头部＞   ::=  int＜标识符＞ |char＜标识符＞
@@ -1233,16 +1236,65 @@ void DeclareHead()
 }
 
 //＜参数表＞    ::=  ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}| ＜空＞
+//void ParameterTable()
+//{
+//	if (sym == "INTTK" || sym == "CHARTK") {
+//		SaveLex();
+//		if (sym == "INTTK") parakind.push_back("int");
+//		else				parakind.push_back("char");
+//		//标识符
+//		NextSym();
+//		paraname.push_back(word);
+//		//paratype.push_back(word);
+//
+//		defType[word] = true;
+//		// 
+//		NextSym();
+//		while (sym == "COMMA") {
+//			SaveLex();
+//			// 类型标识符
+//			NextSym();
+//			SaveLex();
+//
+//			if (sym == "INTTK") parakind.push_back("int");
+//			else				parakind.push_back("char");
+//			
+//			//标识符
+//			NextSym();
+//			SaveLex();
+//			paraname.push_back(word);
+//			// 
+//			NextSym();
+//		}
+//	}
+//	// else 就是空 ，不用处理，直接输出
+//	SaveGrammer("<参数表>");
+//}
+
+// 重载
 void ParameterTable()
 {
+	node tmp_para;
+	tmp_para.type = "para"; // 参数类型
+
 	if (sym == "INTTK" || sym == "CHARTK") {
 		SaveLex();
-		if (sym == "INTTK") parakind.push_back("int");
-		else				parakind.push_back("char");
+		if (sym == "INTTK") {
+			parakind.push_back("int");
+			tmp_para.kind = "int";
+		}
+		else {
+			parakind.push_back("char");
+			tmp_para.kind = "char";
+		}
 		//标识符
 		NextSym();
 		paraname.push_back(word);
-		//paratype.push_back(word);
+		tmp_para.name = word;
+		tmp_para.offset = 0;
+		//将参数保存到localTable
+		localTable[tmp_para.name] = tmp_para;
+
 
 		defType[word] = true;
 		// 
@@ -1253,13 +1305,24 @@ void ParameterTable()
 			NextSym();
 			SaveLex();
 
-			if (sym == "INTTK") parakind.push_back("int");
-			else				parakind.push_back("char");
-			
+			if (sym == "INTTK") {
+				parakind.push_back("int");
+				tmp_para.kind = "int";
+			}
+			else {
+				parakind.push_back("char");
+				tmp_para.kind = "char";
+			}
+
 			//标识符
 			NextSym();
 			SaveLex();
 			paraname.push_back(word);
+
+			tmp_para.name = word;
+			//将参数保存到localTable
+			tmp_para.offset = 0;
+			localTable[tmp_para.name] = tmp_para;
 			// 
 			NextSym();
 		}
@@ -1268,12 +1331,15 @@ void ParameterTable()
 	SaveGrammer("<参数表>");
 }
 
+
 //＜有返回值函数定义＞  ::=  ＜声明头部＞'('＜参数表＞')' '{'＜复合语句＞'}'  
 void FuncDefWithReturn()
 {
+	string func_name;
+
 	NTKclear();
 	//parakind.clear(); //参数表清空
-
+	
 	type = "func";
 	//kind = "with";
 	if (sym == "INTTK") kind = "int";
@@ -1282,6 +1348,9 @@ void FuncDefWithReturn()
 	// 声明头部
 	DeclareHead();
 	
+	//  记录函数名
+	func_name = name;
+
 	// (
 	if (sym != "LPARENT") error();
 	SaveLex();
@@ -1319,12 +1388,17 @@ void FuncDefWithReturn()
 	NextSym();
 
 	isInFuncDef = false;
+
+	all_local_tables[func_name] = localTable;
+
 	localTable.clear();
 }
 
 // ＜无返回值函数定义＞  ::= void＜标识符＞'('＜参数表＞')''{'＜复合语句＞'}'
 void FuncDefWithoutReturn()
 {
+	string func_name;
+
 	NTKclear();
 	//parakind.clear();
 
@@ -1337,6 +1411,7 @@ void FuncDefWithoutReturn()
 	NextSym();
 	SaveLex();
 	name = word;
+	func_name = name;
 	if (isRedefined(word)) Error('b');
 	defType[word] = false;
 	// (
@@ -1372,6 +1447,7 @@ void FuncDefWithoutReturn()
 	NextSym();
 	isInFuncDef = false;
 
+	all_local_tables[func_name] = localTable;
 
 	localTable.clear();
 }
@@ -1415,40 +1491,17 @@ void Output2File()
 	}
 }
 
-void PrintTable()
-{
-	cout << "this is printTable function" << endl;
-	map<string, node>::iterator iter;
-	iter = globalTable.begin();
-	while (iter != globalTable.end()) {
-		cout << iter->second.name << " " << iter->second.type << " " << iter->second.kind << endl;
-		if (iter->second.parakind.size() != 0) {
-			cout << "size of the paralist:  " << iter->second.parakind.size() << endl;
-		}
-		iter++;
-	}
-}
+//void PrintTable()
+//{
+//	cout << "this is printTable function" << endl;
+//	map<string, node>::iterator iter;
+//	iter = globalTable.begin();
+//	while (iter != globalTable.end()) {
+//		cout << iter->second.name << " " << iter->second.type << " " << iter->second.kind << endl;
+//		if (iter->second.parakind.size() != 0) {
+//			cout << "size of the paralist:  " << iter->second.parakind.size() << endl;
+//		}
+//		iter++;
+//	}
+////}
 
-int main()
-{
-	// 读文件
-	ReadFiles();
-	// 执行work2
-	work2();
-	//常量说明
-	NextSym();
-	Program();
-
-
-	// 检查符号表：
-	//PrintTable();
-
-	//FuncDefWithReturn();
-	//MainFunction();
-	//Statement();
-	// 输出到文件
-	Output2File();
-	// 关闭文件
-	CloseFiles();
-	return 0;
-}

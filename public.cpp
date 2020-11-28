@@ -36,6 +36,7 @@ bool isInFuncDef = false;
 string name;
 string type; // var or const 
 string kind;
+int offset;
 //下面的不用管，只是为了凑够参数
 vector<string> parakind;
 vector<string> paraname;
@@ -48,19 +49,23 @@ string varNameInitialized;
 vector<string> valueParameters;
 //
 bool hasRtnStatement;
-//
+
+//数组的两个维度
 int demension1;
 int demension2;
-//
+//switch表达式的类型
 string switchType;
 // 存a类型error的行数，如果到了就在nextsym输出
 vector<int> errorA;
-//
+
+//这是清空全局变量的。
+//现在我想用引用不用全局变量了
 void NTKclear()
 {
 	name = "";
 	type = "";
 	kind = "";
+	offset = 0;
 	parakind.clear();
 	paraname.clear();
 }
@@ -72,6 +77,7 @@ void Save2GlobalTable()
 	tmp.name = name;
 	tmp.type = type;
 	tmp.kind = kind;
+	tmp.offset = offset;
 	// 参数列表： 如果type是func的话，才会修改和查看
 	tmp.parakind = parakind;
 	tmp.paraname = paraname;
@@ -86,6 +92,7 @@ void Save2LocalTable()
 	tmp.name = name;
 	tmp.type = type;
 	tmp.kind = kind;
+	tmp.offset = offset;
 	// 参数列表： 如果type是func的话，才会修改和查看
 	tmp.parakind = parakind;
 	tmp.paraname = paraname;
@@ -99,3 +106,7 @@ void Save2Table()
 	if (isInFuncDef) Save2LocalTable();
 	else Save2GlobalTable();
 }
+
+// 保存所有local_table
+map<string, map<string, node>> all_local_tables;
+
