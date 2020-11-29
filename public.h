@@ -66,7 +66,15 @@ struct node {
 	
 	/*记录变量、常量、参数在栈中的偏移*/
 	/*func的参数同变量一起记录，只不过其type改成para*/
-	int offset;
+	// 偏移表示的是，这个变量名在栈中起始位置
+	int offset = 0;  // 就是base
+	int space = 0;  //  在栈中分配空间的大小，
+
+	// 对于数组变量，标记其是数组记录其两个维度的信息
+	bool is_arr = false;
+	int d1 = 0; // 维度1
+	int d2 = 0; // 维度2
+
 };
 
 //主map: 全局变量/常量 
@@ -92,6 +100,7 @@ extern string varNameInitialized;
 extern string name;
 extern string type; // var or const 
 extern string kind;
+extern int g_offset;
 //下面的不用管，只是为了凑够参数
 extern vector<string> parakind;
 extern vector<string> paraname;

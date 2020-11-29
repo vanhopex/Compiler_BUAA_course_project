@@ -2,7 +2,16 @@
 #include "work2.h"
 #include "work3.h"
 #include "ErrorHandling.h"
+#include "code_generate.h"
 using namespace std;
+// 
+int GetOffset(int space)
+{
+	int tmp = g_offset;
+	g_offset += space;
+	return tmp;
+}
+
 // 查看下一个单词和类别码
 void NextSym()
 {
@@ -198,7 +207,6 @@ void VariableInitialized()
 void VariableUninitialized()
 {
 	
-
 	while (sym == "COMMA") {
 		SaveLex();
 		//
@@ -206,9 +214,10 @@ void VariableUninitialized()
 		SaveLex(); // 标识符
 		
 		name = word;
+		
 		if (isRedefined(word)) Error('b');
 		Save2Table();
-		
+		g_offset += 4;
 
 		NextSym();
 		if (sym == "LBRACK") {
@@ -245,7 +254,7 @@ void VariableDefinition()
 	name = word;
 	varNameInitialized = name;
 	if (isRedefined(word)) Error('b');
-	Save2Table();
+	// Save2Table放在下面没事吧？//////////////////////////////////////////
 	
 
 	// 前面是提取左因子
@@ -275,6 +284,17 @@ void VariableDefinition()
 			i++;
 		}
 	}
+
+	
+	Save2Table();
+	if (demension1 == 0 && demension2 == 0) {
+		g_offset += 4;
+	}
+	else {
+		g_offset += demension1 * demension2 * 4;
+	}
+	
+
 	// 下一个是等号的话，就是有初始化，否则无初始化
 	if (sym == "ASSIGN") {
 		VariableInitialized();
@@ -335,9 +355,10 @@ void ConstantDefinition()
 				   //这里都是默认正确的
 		// 如果留一个判断错误的接口的话，应该判断每一个字符是不是应该是它
 		name = word;
+		
 		if (isRedefined(word)) Error('b');
 		Save2Table();
-		
+		g_offset += 4;
 		
 		NextSym(); // =
 		SaveLex(); // 保存 =
@@ -355,9 +376,10 @@ void ConstantDefinition()
 			NextSym(); 
 			SaveLex();
 			name = word;
+			
 			if (isRedefined(word)) Error('b');
 			Save2Table();
-			
+			g_offset += 4;
 			// =
 			NextSym(); 
 			SaveLex(); 
@@ -375,9 +397,10 @@ void ConstantDefinition()
 		SaveLex();
 		
 		name = word;
+		
 		if (isRedefined(word)) Error('b');
 		Save2Table();
-		
+		g_offset += 4;
 
 		NextSym(); // =
 		SaveLex();
@@ -394,8 +417,10 @@ void ConstantDefinition()
 			SaveLex();
 			
 			name = word;
+			
 			if (isRedefined(word)) Error('b');
 			Save2Table();
+			g_offset += 4;
 			
 
 			NextSym(); // =
@@ -1171,6 +1196,7 @@ void  CompoundStatement()
 // ＜主函数＞    ::= void main‘(’‘)’ ‘{’＜复合语句＞‘}’   
 void MainFunction()
 {
+	g_offset = 0;
 	// 主函数也是一个部分函数
 
 	NTKclear();
@@ -1236,42 +1262,7 @@ void DeclareHead()
 }
 
 //＜参数表＞    ::=  ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}| ＜空＞
-//void ParameterTable()
-//{
-//	if (sym == "INTTK" || sym == "CHARTK") {
-//		SaveLex();
-//		if (sym == "INTTK") parakind.push_back("int");
-//		else				parakind.push_back("char");
-//		//标识符
-//		NextSym();
-//		paraname.push_back(word);
-//		//paratype.push_back(word);
-//
-//		defType[word] = true;
-//		// 
-//		NextSym();
-//		while (sym == "COMMA") {
-//			SaveLex();
-//			// 类型标识符
-//			NextSym();
-//			SaveLex();
-//
-//			if (sym == "INTTK") parakind.push_back("int");
-//			else				parakind.push_back("char");
-//			
-//			//标识符
-//			NextSym();
-//			SaveLex();
-//			paraname.push_back(word);
-//			// 
-//			NextSym();
-//		}
-//	}
-//	// else 就是空 ，不用处理，直接输出
-//	SaveGrammer("<参数表>");
-//}
 
-// 重载
 void ParameterTable()
 {
 	node tmp_para;
@@ -1291,7 +1282,8 @@ void ParameterTable()
 		NextSym();
 		paraname.push_back(word);
 		tmp_para.name = word;
-		tmp_para.offset = 0;
+		tmp_para.offset = g_offset;
+		g_offset += 4;
 		//将参数保存到localTable
 		localTable[tmp_para.name] = tmp_para;
 
@@ -1321,8 +1313,10 @@ void ParameterTable()
 
 			tmp_para.name = word;
 			//将参数保存到localTable
-			tmp_para.offset = 0;
+			tmp_para.offset = g_offset;
+			g_offset += 4;
 			localTable[tmp_para.name] = tmp_para;
+		///////////////////////////////////////////////////////这里也可以用Save2Table///// 下面也要改
 			// 
 			NextSym();
 		}
@@ -1330,11 +1324,73 @@ void ParameterTable()
 	// else 就是空 ，不用处理，直接输出
 	SaveGrammer("<参数表>");
 }
-
+// 重载
+//void ParameterTable(int &offset_now)
+//{
+//	node tmp_para;
+//	tmp_para.type = "para"; // 参数类型
+//
+//	if (sym == "INTTK" || sym == "CHARTK") {
+//		SaveLex();
+//		if (sym == "INTTK") {
+//			parakind.push_back("int");
+//			tmp_para.kind = "int";
+//		}
+//		else {
+//			parakind.push_back("char");
+//			tmp_para.kind = "char";
+//		}
+//		//标识符
+//		NextSym();
+//		paraname.push_back(word);
+//		tmp_para.name = word;
+//		tmp_para.offset = GetOffset(offset_now, 4);
+//
+//		//将参数保存到localTable
+//		localTable[tmp_para.name] = tmp_para;
+//
+//
+//		defType[word] = true;
+//		// 
+//		NextSym();
+//		while (sym == "COMMA") {
+//			SaveLex();
+//			// 类型标识符
+//			NextSym();
+//			SaveLex();
+//
+//			if (sym == "INTTK") {
+//				parakind.push_back("int");
+//				tmp_para.kind = "int";
+//			}
+//			else {
+//				parakind.push_back("char");
+//				tmp_para.kind = "char";
+//			}
+//
+//			//标识符
+//			NextSym();
+//			SaveLex();
+//			paraname.push_back(word);
+//
+//			tmp_para.name = word;
+//			//将参数保存到localTable
+//			tmp_para.offset = GetOffset(offset_now, 4);
+//			localTable[tmp_para.name] = tmp_para;
+//			// 
+//			NextSym();
+//		}
+//	}
+//	// else 就是空 ，不用处理，直接输出
+//	SaveGrammer("<参数表>");
+//}
+//
 
 //＜有返回值函数定义＞  ::=  ＜声明头部＞'('＜参数表＞')' '{'＜复合语句＞'}'  
 void FuncDefWithReturn()
 {
+	g_offset = 0;
+
 	string func_name;
 
 	NTKclear();
@@ -1397,6 +1453,7 @@ void FuncDefWithReturn()
 // ＜无返回值函数定义＞  ::= void＜标识符＞'('＜参数表＞')''{'＜复合语句＞'}'
 void FuncDefWithoutReturn()
 {
+	g_offset = 0;
 	string func_name;
 
 	NTKclear();
@@ -1491,17 +1548,5 @@ void Output2File()
 	}
 }
 
-//void PrintTable()
-//{
-//	cout << "this is printTable function" << endl;
-//	map<string, node>::iterator iter;
-//	iter = globalTable.begin();
-//	while (iter != globalTable.end()) {
-//		cout << iter->second.name << " " << iter->second.type << " " << iter->second.kind << endl;
-//		if (iter->second.parakind.size() != 0) {
-//			cout << "size of the paralist:  " << iter->second.parakind.size() << endl;
-//		}
-//		iter++;
-//	}
-////}
+
 

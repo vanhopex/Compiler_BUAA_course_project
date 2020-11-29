@@ -1,17 +1,15 @@
 
-const int a = 1;
-char c = 'c';
-
 int f1(int x, int y)
 {
     const int c = 4;
     int a,b,t,w;
+    int sd[2][2];
     char d = 'f';
     a = x + y;
     return (a);
 }
 
-void f2()
+void f2(int x, int y)
 {
     int a = 1;
     int b;

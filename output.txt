@@ -1,22 +1,3 @@
-CONSTTK const
-INTTK int
-IDENFR a
-ASSIGN =
-INTCON 1
-<无符号整数>
-<整数>
-<常量定义>
-SEMICN ;
-<常量说明>
-CHARTK char
-IDENFR c
-ASSIGN =
-CHARCON c
-<常量>
-<变量定义及初始化>
-<变量定义>
-SEMICN ;
-<变量说明>
 INTTK int
 IDENFR f1
 <声明头部>
@@ -46,6 +27,19 @@ COMMA ,
 IDENFR t
 COMMA ,
 IDENFR w
+<变量定义无初始化>
+<变量定义>
+SEMICN ;
+INTTK int
+IDENFR sd
+LBRACK [
+INTCON 2
+<无符号整数>
+RBRACK ]
+LBRACK [
+INTCON 2
+<无符号整数>
+RBRACK ]
 <变量定义无初始化>
 <变量定义>
 SEMICN ;
@@ -88,6 +82,10 @@ RBRACE }
 VOIDTK void
 IDENFR f2
 LPARENT (
+INTTK int
+COMMA ,
+INTTK int
+IDENFR y
 <参数表>
 RPARENT )
 LBRACE {

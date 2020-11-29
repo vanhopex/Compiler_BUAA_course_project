@@ -7,9 +7,9 @@ using namespace std;
 // 中间代码是四元式
 struct Quaternary {
 	string op;
-	string label_1;
-	string label_2;
-	string result;
+	string r1;
+	string r2;
+	string res;
 };
 // 所有中间代码存在这里
 vector<Quaternary> middle_code; 
@@ -30,4 +30,6 @@ string GenerateLabel()
 	return "zwh_label_" + to_string(label_number);
 }
 // 将语法分析的重载都写到这里来，结构清晰一点
+
+// 函数内/ 变量常量参数偏移设计
 
