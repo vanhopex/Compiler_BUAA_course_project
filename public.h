@@ -5,7 +5,9 @@
 #include <string>
 #include <cstdio>
 #include <string>
+#include <queue>
 #include <map>
+#include <stack>
 #include <vector>
 #include <cctype>//toupper/tolower
 #include <algorithm>//transform

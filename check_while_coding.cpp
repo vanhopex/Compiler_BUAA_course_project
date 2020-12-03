@@ -2,6 +2,7 @@
 #include "work2.h"
 #include "work3.h"
 #include "ErrorHandling.h"
+#include "middle_code_generate.h"
 using namespace std;
 
 void PrintTable()
@@ -31,6 +32,44 @@ void PrintTable()
 
 }
 
+string GetIrOp(IR_OPS op)
+{
+	switch (op) {
+		case IR_ADD:   return "ADD";
+		case IR_SUB:   return "SUB";
+		case IR_DIV:   return "DIV";
+		case IR_MUL:   return "MUL";
+		case IR_GOTO:  return "GOTO";
+		case IR_CASE:  return "CASE";
+		case IR_LABEL: return "LABEL";
+		case IR_EQ:	   return "EQ";
+		case IR_NEQ:   return "NEQ";
+		case IR_GT:    return "GT";
+		case IR_LT:    return "LT";
+		case IR_GET:   return "GET";
+		case IR_LET:   return "LET";
+		case IR_IN:	   return "INPUT";
+		case IR_OUT:   return "OUTPUT";
+		case IR_CALL:  return "CALL";
+		case IR_PARA:  return "PARA";
+		case IR_PUSH:  return "PUSH";
+		case IR_FDEF:  return "FDEF"; // 这个应该可以用label代替
+		case IR_RTNV:  return "RTNV";
+		case IR_ASS:   return "ASS";
+		default: return "ERROR";
+
+	}
+}
+
+void PrintMiddleCode()
+{
+	vector<ForElements>::iterator iter = middle_code.begin();
+	while (iter != middle_code.end()) {
+		cout << GetIrOp(iter->op)  << " " << iter->r1 << " " << iter->r2 << " " << iter->res << endl;
+
+		iter++;
+	}
+}
 
 int main()
 {
@@ -43,8 +82,7 @@ int main()
 	Program();
 
 
-	// 检查符号表：
-	PrintTable();
+	PrintMiddleCode();
 
 	//FuncDefWithReturn();
 	//MainFunction();

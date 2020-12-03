@@ -17,11 +17,11 @@ void f2(int x, int y)
 }
 void main()
 {
-    const int d = 1;
-    const int e = 4;
-    int x = 100;
-    int a[10];
-    char b[2][2];
-    int c[2][2] = {{1,2},{3,4}};
-    b[1][1] = 'c'; 
+    int x = 1;
+    int  y = 2;
+     int t;
+   t = f1(x,y);
+   f2(x,y);
+ 
+
 }
