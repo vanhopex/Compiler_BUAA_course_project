@@ -11,7 +11,7 @@ void PrintTable()
 	cout << "In Global Table" << endl;
 	map<string, node>::iterator g_iter = globalTable.begin();
 	while (g_iter != globalTable.end()) {
-		printf("%s, %s, %s, %d\n", g_iter->second.name.c_str(), g_iter->second.type.c_str(), g_iter->second.kind.c_str(), g_iter->second.offset);
+		printf("%s, %s, %s, %d\n", g_iter->second.name.c_str(), g_iter->second.type.c_str(), g_iter->second.kind.c_str(), g_iter->second.space);
 		g_iter++;
 	}
 
@@ -22,9 +22,8 @@ void PrintTable()
 		cout << "Now In function: " << l_iter->first << endl;
 		map<string, node>::iterator ll_iter = l_iter->second.begin();
 		while (ll_iter != l_iter->second.end()) {
-			printf("%s, %s, %s, %d\n", ll_iter->second.name.c_str(), ll_iter->second.type.c_str(), ll_iter->second.kind.c_str(), ll_iter->second.offset);
+			printf("%s, %s, %s, %d, %s\n", ll_iter->second.name.c_str(), ll_iter->second.type.c_str(), ll_iter->second.kind.c_str(), ll_iter->second.offset, ll_iter->second.scope.c_str());
 			ll_iter++;
-			
 		}
 		cout << endl;
 		l_iter++;
@@ -39,6 +38,7 @@ string GetIrOp(IR_OPS op)
 		case IR_SUB:   return "SUB";
 		case IR_DIV:   return "DIV";
 		case IR_MUL:   return "MUL";
+		case IR_MINUS: return "MINUS";
 		case IR_GOTO:  return "GOTO";
 		case IR_CASE:  return "CASE";
 		case IR_LABEL: return "LABEL";
@@ -56,16 +56,20 @@ string GetIrOp(IR_OPS op)
 		case IR_FDEF:  return "FDEF"; // 这个应该可以用label代替
 		case IR_RTNV:  return "RTNV";
 		case IR_ASS:   return "ASS";
+		case IR_LW:   return "LW";
+		case IR_LV0:   return "LV0";
+		case IR_SV0:   return "SV0";
+		case IR_VAR:   return "VAR";
+		case IR_CONST : return "COSNT";
 		default: return "ERROR";
-
 	}
 }
 
 void PrintMiddleCode()
 {
-	vector<ForElements>::iterator iter = middle_code.begin();
+	vector<FourElements>::iterator iter = middle_code.begin();
 	while (iter != middle_code.end()) {
-		cout << GetIrOp(iter->op)  << " " << iter->r1 << " " << iter->r2 << " " << iter->res << endl;
+		cout << GetIrOp(iter->op)  << " " << iter->r1 << " " << iter->r2 << " " << iter->res << " " <<iter->scope << endl;
 
 		iter++;
 	}
@@ -81,7 +85,7 @@ int main()
 	NextSym();
 	Program();
 
-
+	PrintTable();
 	PrintMiddleCode();
 
 	//FuncDefWithReturn();

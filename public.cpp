@@ -37,6 +37,8 @@ string name;
 string type; // var or const 
 string kind;
 int g_offset;
+string g_scope = "global";
+int g_space = 4;
 //下面的不用管，只是为了凑够参数
 vector<string> parakind;
 vector<string> paraname;
@@ -76,7 +78,9 @@ void Save2GlobalTable()
 	tmp.name = name;
 	tmp.type = type;
 	tmp.kind = kind;
-	tmp.offset = 0;
+	tmp.offset = g_offset;
+	tmp.scope = "global";
+	tmp.space = g_space;
 	// 参数列表： 如果type是func的话，才会修改和查看
 	tmp.parakind = parakind;
 	tmp.paraname = paraname;
@@ -92,6 +96,7 @@ void Save2LocalTable()
 	tmp.type = type;
 	tmp.kind = kind;
 	tmp.offset = g_offset;
+	tmp.scope = g_scope;
 	// 参数列表： 如果type是func的话，才会修改和查看
 	tmp.parakind = parakind;
 	tmp.paraname = paraname;

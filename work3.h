@@ -43,7 +43,7 @@ void Factor();
 void Term();
 //＜表达式＞    ::= ［＋｜－］＜项＞{＜加法运算符＞＜项＞} 
 void Expression();
-
+void Expression(string& result);
 // ＜读语句＞    ::=  scanf '('＜标识符＞')' 
 void ReadStatement();
 
@@ -68,6 +68,7 @@ void ReturnStatement();
 void ValueParameterTable();
 //＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'   
 void FunctionWithReturn();
+void FunctionWithReturn(string& result);
 // ＜无返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
 void FunctionWithoutReturn();
 //＜条件＞    ::=  ＜表达式＞＜关系运算符＞＜表达式＞     
@@ -108,4 +109,6 @@ void Program();
 void Output2File();
 
 int GetLine();
+
+string GetVarOffset(string arr_name, string d1, string d2);
 #endif // ! __WORK3_

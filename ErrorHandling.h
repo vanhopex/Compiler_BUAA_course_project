@@ -12,4 +12,5 @@ string GetFuncKind(string tmpname);
 string GetFuncKindInLocal();
 vector<string> GetParKinds(string tmpname);
 int Str2Int(string tmpstr);
+string toLower(string tmpstring);
 #endif

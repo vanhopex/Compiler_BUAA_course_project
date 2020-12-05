@@ -2,7 +2,6 @@
 #define __MIDDLE_CODE_GENERATE_
 #include "public.h"
 using namespace std;
-
 enum IR_OPS {
 	IR_NULL,
 	IR_ADD,
@@ -27,25 +26,32 @@ enum IR_OPS {
 	IR_FDEF,
 	IR_RTNV,
 	IR_ASS, // = 
-
+	IR_LW,
+	IR_SW,
+	IR_LV0,  // 取寄存器v0 的值
+	IR_SV0,  // 存值到V0
+	IR_VAR,
+	IR_CONST,
 };
-
 // 中间代码是四元式
-struct ForElements {
+struct FourElements {
 	/*string op = "";*/
 	IR_OPS op = IR_NULL;
 	string r1 = "";
 	string r2 = "";
 	string res = "";
-	ForElements() :op(), r1(), r2(), res() {}
-	/*ForElements(string _op, string _res) : op(_op), r1(), r2(), res(_res) {}
-	ForElements(string _op, string _r1, string _res) : op(_op), r1(_r1), r2(), res(_res) {}*/
-	ForElements(IR_OPS _op, string _r1, string _r2, string _res) : op(_op), r1(_r1), r2(_r2), res(_res) {}
+	string scope = ""; //
+	FourElements() :op(), r1(), r2(), res() {}
+	/*FourElements(string _op, string _res) : op(_op), r1(), r2(), res(_res) {}
+	FourElements(string _op, string _r1, string _res) : op(_op), r1(_r1), r2(), res(_res) {}*/
+	FourElements(IR_OPS _op, string _r1, string _r2, string _res) : op(_op), r1(_r1), r2(_r2), res(_res) {}
+	// 五元式用来指示变量/常量/位于哪个函数内部/便于生成目标代码的时候差符号表
+	FourElements(IR_OPS _op, string _r1, string _r2, string _res, string _scope) : op(_op), r1(_r1), r2(_r2), res(_res), scope(_scope) {}
 };
 string GenerateLabel();
 string  GenerateMidVar();
-void Save2IR(ForElements s);
-
-extern vector<ForElements> middle_code;
+void SetVarNum0();
+void Save2IR(FourElements s);
+extern vector<FourElements> middle_code;
 #endif
 

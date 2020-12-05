@@ -1,27 +1,29 @@
+const int sd = 3;
+int a = 1;
+char fd = 'a';
+int b[2] = {1,2};
 
-int f1(int x, int y)
-{
-    const int c = 4;
-    int a,b,t,w;
-    int sd[2][2];
-    char d = 'f';
-    a = x + y;
-    return (a);
+int c[2][2] = {{1,2},{3,4}};
+int x = 1;
+void f1(int x, int y)
+{ 
+  const char fas = 'f';
+   int p;
+   int a = 1;
+   char f[2];
+  char wf[3][2];
+  
+ wf[2][1] = 'c'; 
+  p = -x*(x+y);
 }
 
-void f2(int x, int y)
+void f2()
 {
-    int a = 1;
-    int b;
-    b = f1(a,a);
+  int x;
+  x = 4+5/2-4;
+
 }
 void main()
 {
-    int x = 1;
-    int  y = 2;
-     int t;
-   t = f1(x,y);
-   f2(x,y);
- 
-
+   int a = 2;
 }
