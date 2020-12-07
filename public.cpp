@@ -53,8 +53,8 @@ vector<string> valueParameters;
 bool hasRtnStatement;
 
 //数组的两个维度
-int demension1;
-int demension2;
+int demension1 = 0;
+int demension2 = 0;
 //switch表达式的类型
 string switchType;
 // 存a类型error的行数，如果到了就在nextsym输出
@@ -81,6 +81,8 @@ void Save2GlobalTable()
 	tmp.offset = g_offset;
 	tmp.scope = "global";
 	tmp.space = g_space;
+	tmp.d1 = demension1;
+	tmp.d2 = demension2;
 	// 参数列表： 如果type是func的话，才会修改和查看
 	tmp.parakind = parakind;
 	tmp.paraname = paraname;
@@ -97,6 +99,8 @@ void Save2LocalTable()
 	tmp.kind = kind;
 	tmp.offset = g_offset;
 	tmp.scope = g_scope;
+	tmp.d1 = demension1;
+	tmp.d2 = demension2;
 	// 参数列表： 如果type是func的话，才会修改和查看
 	tmp.parakind = parakind;
 	tmp.paraname = paraname;

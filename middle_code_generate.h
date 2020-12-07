@@ -23,7 +23,8 @@ enum IR_OPS {
 	IR_PUSH,
 	IR_CALL,
 	IR_PARA,
-	IR_FDEF,
+	IR_FDEF, // 函数定义开始
+	IR_FEND, // 函数定义结束
 	IR_RTNV,
 	IR_ASS, // = 
 	IR_LW,

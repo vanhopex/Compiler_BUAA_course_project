@@ -37,25 +37,28 @@ bool IsInLocalTable_GA(string var_name) {
 	return false;
 }
 
-// 得到数组变量的两个维度信息
+// 得到数组变量的两个维度信息 / 局部函数会引用全局变量的数组，所以局部符号表查不到，就要查全局符号表
 pair<int, int> GetDemensions_GA(string arr_name) {
-	// 这个函数只在局部函数中使用，不必查看全局函数
+	
+	string tmpname = toLower(arr_name);
+	map<string, node>::iterator iter;
 
 	if (isInFuncDef) {
-		string tmpname = toLower(arr_name);
-		map<string, node>::iterator iter;
-
+		// 查局部符号表
 		iter = localTable.begin();
 		while (iter != localTable.end()) {
-
 			if (toLower(iter->first) == tmpname) return make_pair(iter->second.d1, iter->second.d2);
-
 			iter++;
 		}
-		cout << "GetDemensions_GA error" << endl;
+		// 查全局符号表
+		iter = globalTable.begin();
+		while (iter != globalTable.end()) {
+			if (toLower(iter->first) == tmpname) return make_pair(iter->second.d1, iter->second.d2);
+			iter++;
+		}
 	}
 	else {
-		cout << "GetDemensions_GA error" << endl;
+		cout << "GetDemensions_GA Error!!!" << endl << endl;
 	}
 
 	return make_pair(-1,-1);

@@ -399,21 +399,34 @@ void VariableUninitialized()
 	while (sym == "COMMA") {
 		SaveLex();
 		//
+		demension1 = 0;
+		demension2 = 0;
+		string var_name;
+
 		NextSym();
 		SaveLex(); // 标识符
 		
 		name = word;
+		var_name = word;
 		
 		if (isRedefined(word)) Error('b');
-		Save2Table();
-		g_offset += 4;
+		/*Save2Table();*/
+		//g_offset += 4;
 
+		int i = 0;
 		NextSym();
 		if (sym == "LBRACK") {
 			while (sym == "LBRACK") {
 				SaveLex();
 				// 无符号整数
 				NextSym();
+				if (i == 0) {
+					demension1 = Str2Int(word);
+					i++;
+				}
+				else {
+					demension2 = Str2Int(word);
+				}
 
 				IntegerWithoutSign();
 				// 
@@ -424,6 +437,35 @@ void VariableUninitialized()
 				}
 			}
 		}
+		if (demension1 == 0 && demension2 == 0) {
+			g_space = 4;
+		}
+		else if (demension1 != 0 && demension2 == 0) {
+
+			g_space = demension1 * 4;
+		}
+		else {
+			g_space = demension1 * demension2 * 4;
+		}
+
+		Save2Table();
+		g_space = 4;
+
+
+		if (demension1 == 0 && demension2 == 0) {
+			g_offset += 4;
+		}
+		else if (demension1 != 0 && demension2 == 0) {
+			g_offset += demension1 * 4;
+			g_space = demension1 * 4;
+		}
+		else {
+			g_offset += demension1 * demension2 * 4;
+			g_space = demension1 * demension2 * 4;
+		}
+
+
+		Save2IR(FourElements(IR_VAR, "", "", var_name, g_scope));
 	}
 	SaveGrammer("<变量定义无初始化>");
 	//NextSym();
@@ -453,17 +495,18 @@ void VariableDefinition()
 
 	// 前面是提取左因子
 	NextSym();
-	int i = 1;
+	int i = 0;
 	if (sym == "LBRACK") {
 		while (sym == "LBRACK") {
 			SaveLex();
 
 			// 无符号整数
 			NextSym();
-			if (i == 1) {
+			if (i == 0) {
 				demension1 = Str2Int(word);
+				i++;
 			}
-			else if (i == 2) {
+			else {
 				demension2 = Str2Int(word);
 			}
 
@@ -475,7 +518,6 @@ void VariableDefinition()
 
 				NextSym();
 			}
-			i++;
 		}
 	}
 
@@ -516,8 +558,9 @@ void VariableDefinition()
 		
 	}
 	else {
-		VariableUninitialized();
 		Save2IR(FourElements(IR_VAR, "", "", var_name, g_scope));
+		VariableUninitialized();
+		
 	}
 	SaveGrammer("<变量定义>");
 }
@@ -831,6 +874,8 @@ void Factor(string& result)
 	}
 	// 表达式
 	else if (sym == "LPARENT") {
+		typeOfExpr = "int";
+
 		SaveLex();
 		//
 		NextSym();
@@ -913,7 +958,7 @@ void Factor(string& result)
 		else {
 			string offset = GetVarOffset(arr_name, t1, t2);
 			string middle2 = GenerateMidVar();
-			Save2IR(FourElements(IR_LW, arr_name,offset, middle2,g_scope)); // 生成目标代码时判断arr_name是全局还是局部，根据offset来生成不同的目标代码
+			Save2IR(FourElements(IR_LW, arr_name, offset, middle2,g_scope)); // 生成目标代码时判断arr_name是全局还是局部，根据offset来生成不同的目标代码
 			
 			result = middle2;
 		}
@@ -1018,9 +1063,10 @@ void Expression(string& result)
 	}
 	string t = "";
 	Term(t); /*BUG3: +-之后应该是一个项，这里忘记写了*/
-	string middle_var1 = GenerateMidVar();
+	
 
 	if (flag) {
+		string middle_var1 = GenerateMidVar();
 		Save2IR(FourElements(IR_MINUS, t, "", middle_var1, g_scope));
 		terms_stack.push(middle_var1);
 	}
@@ -1056,6 +1102,66 @@ void Expression(string& result)
 	}
 	result = terms_stack.top();
 	SetVarNum0();
+	SaveGrammer("<表达式>");
+}
+// 为了<条件>重载
+void Expression(string& result, bool is_clear_mid_var_num)
+{
+	stack<string> terms_stack;
+
+	bool flag = false;
+
+	typeOfExpr = "int";
+	if (sym == "PLUS" || sym == "MINU") {
+		if (sym == "MINU") {
+			flag = true;
+		}
+		SaveLex();
+		NextSym();
+	}
+	string t = "";
+	Term(t); /*BUG3: +-之后应该是一个项，这里忘记写了*/
+
+
+	if (flag) {
+		string middle_var1 = GenerateMidVar();
+		Save2IR(FourElements(IR_MINUS, t, "", middle_var1, g_scope));
+		terms_stack.push(middle_var1);
+	}
+	else {
+		terms_stack.push(t);
+	}
+
+	while (sym == "PLUS" || sym == "MINU") {
+		SaveLex();
+		string op = word;
+
+		//string t = "";
+		NextSym();
+		Term(t);
+		terms_stack.push(t);
+		typeOfExpr = "int";
+
+		string r1 = terms_stack.top();
+		terms_stack.pop();
+		string r2 = terms_stack.top();
+		terms_stack.pop();
+
+		string res = GenerateMidVar();
+		terms_stack.push(res);
+
+		if (op == "+") {
+			Save2IR(FourElements(IR_ADD, r2, r1, res, g_scope));
+		}
+		else {
+			Save2IR(FourElements(IR_SUB, r2, r1, res, g_scope));
+		}
+
+	}
+	result = terms_stack.top();
+	if (is_clear_mid_var_num) {
+		SetVarNum0();
+	}
 	SaveGrammer("<表达式>");
 }
 // ＜读语句＞    ::=  scanf '('＜标识符＞')' 
@@ -1096,7 +1202,7 @@ void WriteStatement()
 	NextSym();
 	if (sym == "STRCON") {
 		StringG(str);
-		Save2IR(FourElements(IR_OUT, "", "", str, g_scope));
+		Save2IR(FourElements(IR_OUT,"string", "", str, g_scope));
 
 		if (sym == "COMMA") {
 			SaveLex();
@@ -1104,16 +1210,16 @@ void WriteStatement()
 			NextSym();
 			Expression(exp);
 
-			Save2IR(FourElements(IR_OUT, "", "", exp, g_scope));
+			Save2IR(FourElements(IR_OUT, typeOfExpr, "", exp, g_scope));
 		}
 	}
 	else {
 		Expression(exp);
 	
-		Save2IR(FourElements(IR_OUT, "", "", exp, g_scope));
+		Save2IR(FourElements(IR_OUT, typeOfExpr, "", exp, g_scope));
 	}
 
-	Save2IR(FourElements(IR_OUT, "", "", "\n", g_scope)); // 输出换行符
+	Save2IR(FourElements(IR_OUT, "enter", "", "\n", g_scope)); // 输出换行符
 	//////////////////////////
 	if (sym != "RPARENT") Error('l');
 	else {
@@ -1200,7 +1306,7 @@ void SwitchStatement()
 	string test = GenerateLabel();
 	string next = GenerateLabel();
 
-	Save2IR(FourElements(IR_GOTO,"","", test, g_scope));  // goto test
+	
 
 	if (sym != "SWITCHTK") error();
 	SaveLex();
@@ -1214,7 +1320,7 @@ void SwitchStatement()
 	// 表达式
 	NextSym();
 	Expression(t_middle);
-	
+	Save2IR(FourElements(IR_GOTO, "", "", test, g_scope));  // goto test
 
 	switchType = typeOfExpr;
 //get	typeOfExpr
@@ -1235,10 +1341,10 @@ void SwitchStatement()
 	string df_label = GenerateLabel();
 
 	Save2IR(FourElements(IR_LABEL,"","", df_label, g_scope));
-	Save2IR(FourElements(IR_GOTO ,"","", next, g_scope));
+	
 	DefaultStatement();
 	
-
+	Save2IR(FourElements(IR_GOTO, "", "", next, g_scope));
 	value_label_queue.push(make_pair(t_middle, df_label));
 	//} 
 	if (sym != "RBRACE") error();
@@ -1258,9 +1364,35 @@ void SwitchStatement()
 	Save2IR(FourElements(IR_LABEL, "", "", next, g_scope));
 }
 
+//根据 d1 d2 算偏移
 string GetVarOffset(string arr_name, string d1, string d2)
 {
-	int	base_offset = GetBaseOffset_GA(arr_name); 
+	if (d1.empty()) {
+		return "0";
+	}
+	// a[d1]
+	else if (d2.empty()) {
+		return d1;
+	}
+	// a[d1][d2]
+	else {
+		pair<int, int> demensions = GetDemensions_GA(arr_name);
+
+		string middle_var1 = GenerateMidVar();
+		string middle_var2 = GenerateMidVar();
+		//string middle_var3 = GenerateMidVar();
+		//string middle_var4 = GenerateMidVar();
+
+		Save2IR(FourElements(IR_MUL, d1, to_string(demensions.second), middle_var1, g_scope));
+		Save2IR(FourElements(IR_ADD, middle_var1, d2, middle_var2, g_scope));
+		//Save2IR(FourElements(IR_ADD, to_string(base_offset), middle_var2, middle_var3, g_scope));
+		//return middle_var3;
+
+		return middle_var2;
+	}
+
+
+	/*int	base_offset = GetBaseOffset_GA(arr_name); 
 	// a
 	if (d1.empty()) {
 		return to_string(base_offset);
@@ -1284,7 +1416,7 @@ string GetVarOffset(string arr_name, string d1, string d2)
 		Save2IR(FourElements(IR_ADD, middle_var1, d2, middle_var2, g_scope));
 		Save2IR(FourElements(IR_ADD, to_string(base_offset), middle_var2, middle_var3, g_scope));
 		return middle_var3;
-	}
+	} */
 }
 // ＜赋值语句＞   ::=  ＜标识符＞＝＜表达式＞|＜标识符＞'['＜表达式＞']'=＜表达式＞|＜标识符＞'['＜表达式＞']''['＜表达式＞']' =＜表达式＞
 void AssignStatement()
@@ -1367,8 +1499,9 @@ void ReturnStatement()
 		if ((GetFuncKindInLocal() == "int" || GetFuncKindInLocal() == "char") && sym == "RPARENT") {
 			Error('h');
 		}
-
-		Expression();
+		string t = "";
+		Expression(t);
+		Save2IR(FourElements(IR_SV0,t,"","",g_scope));
 		
 		// return int;
 		if ((GetFuncKindInLocal() == "int" || GetFuncKindInLocal() == "char") && GetFuncKindInLocal() != typeOfExpr) {
@@ -1478,7 +1611,7 @@ void FunctionWithReturn()
 	SaveGrammer("<有返回值函数调用语句>");
 	Save2IR(FourElements(IR_CALL,"","",func_name, g_scope));
 	//string middle1 = " "///////////////////
-	Save2IR(FourElements(IR_RTNV, "", "", "", g_scope)); // 这里翻译成返回值值已经存到v0了
+	//Save2IR(FourElements(IR_RTNV, "", "", "", g_scope)); // 这里翻译成返回值值已经存到v0了
 	//result = middle1;
 }
 // ＜无返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
@@ -1512,6 +1645,7 @@ void FunctionWithoutReturn()
 }
 //＜条件＞::=  ＜表达式＞＜关系运算符＞＜表达式＞     
 void Requirement()
+
 {
 	isInRequirement = true;
 
@@ -1533,7 +1667,7 @@ void Requirement(string& middle_1, string& middle_2, string& cmp)
 {
 	isInRequirement = true;
 
-	Expression(middle_1);
+	Expression(middle_1, false);
 	if (typeOfExpr != "int") Error('f');
 	//关系运算符
 	SaveLex();
@@ -1633,6 +1767,13 @@ void Ilength()
 	IntegerWithoutSign();
 	SaveGrammer("<步长>");
 }
+// 重载
+//＜步长＞::= ＜无符号整数＞  
+void Ilength(string& r1)
+{
+	IntegerWithoutSign(r1);
+	SaveGrammer("<步长>");
+}
 //＜循环语句＞   ::=  while '('＜条件＞')'＜语句＞| for'('＜标识符＞＝＜表达式＞;＜条件＞;＜标识符＞＝＜标识符＞(+|-)＜步长＞')'＜语句＞ 
 void WhileStatement()
 {
@@ -1669,6 +1810,8 @@ void WhileStatement()
 		Save2IR(FourElements(GetBranchIns(cmp), middle1, middle2, loop, g_scope));
 	}
 	else if (sym == "FORTK") {
+		string var_name = "";
+		string t = "";
 		//for
 		SaveLex();
 		//(
@@ -1677,14 +1820,18 @@ void WhileStatement()
 		//标识符
 		NextSym();
 		SaveLex();
+		var_name = word;
 		if (GetType(word) == "const") Error('j');
 		if (!IsDefined(word)) Error('c');
 		// =
 		NextSym();
 		SaveLex();
 		// 表达式
+		
 		NextSym();
-		Expression();
+		Expression(t);
+		Save2IR(FourElements(IR_ASS, t, "0",var_name , g_scope));
+		
 
 		//上面就是一个赋值语句
 		//;
@@ -1709,19 +1856,27 @@ void WhileStatement()
 		}
 		
 		SaveLex();
+		var_name = word;
 		// =
 		NextSym();
 		SaveLex();
 		//标识符
 		NextSym();
 		SaveLex();
+		string var_name2 = word;
+		IR_OPS op;
+		string i_length = "";
 		if (!IsDefined(word)) Error('c');
 		// （+|-）
 		NextSym();
 		SaveLex();
+		if (word == "+") {  op = IR_ADD; }
+		else { op = IR_SUB;}
 		//
 		NextSym();
-		Ilength();
+		Ilength(i_length);
+
+		
 		// )
 		if (sym != "RPARENT") Error('l');
 		else {
@@ -1734,6 +1889,7 @@ void WhileStatement()
 		}
 		Statement();
 
+		Save2IR(FourElements(op, var_name2, i_length, var_name));
 
 		Save2IR(FourElements(IR_LABEL, "", "", test, g_scope));
 		Save2IR(FourElements(GetBranchIns(cmp), middle1, middle2, loop, g_scope));
@@ -2073,6 +2229,8 @@ void FuncDefWithReturn()
 	SaveGrammer("<有返回值函数定义>");
 	NextSym();
 
+	Save2IR(FourElements(IR_FEND, "","",func_name, g_scope));
+
 	isInFuncDef = false;
 
 	all_local_tables[func_name] = localTable;
@@ -2135,7 +2293,7 @@ void FuncDefWithoutReturn()
 	SaveGrammer("<无返回值函数定义>");
 	NextSym();
 	isInFuncDef = false;
-
+	Save2IR(FourElements(IR_FEND, "", "", func_name, g_scope));
 	all_local_tables[func_name] = localTable;
 
 	localTable.clear();

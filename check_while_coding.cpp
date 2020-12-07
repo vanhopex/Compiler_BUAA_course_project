@@ -11,7 +11,7 @@ void PrintTable()
 	cout << "In Global Table" << endl;
 	map<string, node>::iterator g_iter = globalTable.begin();
 	while (g_iter != globalTable.end()) {
-		printf("%s, %s, %s, %d\n", g_iter->second.name.c_str(), g_iter->second.type.c_str(), g_iter->second.kind.c_str(), g_iter->second.space);
+		printf("%s, %s, %s, %d; d1: %d, d2: %d\n", g_iter->second.name.c_str(), g_iter->second.type.c_str(), g_iter->second.kind.c_str(), g_iter->second.space, g_iter->second.d1, g_iter->second.d2);
 		g_iter++;
 	}
 
@@ -54,9 +54,10 @@ string GetIrOp(IR_OPS op)
 		case IR_PARA:  return "PARA";
 		case IR_PUSH:  return "PUSH";
 		case IR_FDEF:  return "FDEF"; // 这个应该可以用label代替
+		case IR_FEND:  return "FEND";
 		case IR_RTNV:  return "RTNV";
 		case IR_ASS:   return "ASS";
-		case IR_LW:   return "LW";
+		case IR_LW:    return "LW";
 		case IR_LV0:   return "LV0";
 		case IR_SV0:   return "SV0";
 		case IR_VAR:   return "VAR";
@@ -69,7 +70,7 @@ void PrintMiddleCode()
 {
 	vector<FourElements>::iterator iter = middle_code.begin();
 	while (iter != middle_code.end()) {
-		cout << GetIrOp(iter->op)  << " " << iter->r1 << " " << iter->r2 << " " << iter->res << " " <<iter->scope << endl;
+		cout << GetIrOp(iter->op)  << " " << iter->r1 << " " << iter->r2 << " " << iter->res  << endl;
 
 		iter++;
 	}
