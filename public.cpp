@@ -39,6 +39,7 @@ string kind;
 int g_offset;
 string g_scope = "global";
 int g_space = 4;
+vector<int> g_initial_value_list;
 //下面的不用管，只是为了凑够参数
 vector<string> parakind;
 vector<string> paraname;
@@ -83,6 +84,7 @@ void Save2GlobalTable()
 	tmp.space = g_space;
 	tmp.d1 = demension1;
 	tmp.d2 = demension2;
+	tmp.initial_value_list = g_initial_value_list;
 	// 参数列表： 如果type是func的话，才会修改和查看
 	tmp.parakind = parakind;
 	tmp.paraname = paraname;
@@ -101,6 +103,7 @@ void Save2LocalTable()
 	tmp.scope = g_scope;
 	tmp.d1 = demension1;
 	tmp.d2 = demension2;
+	tmp.initial_value_list = g_initial_value_list;
 	// 参数列表： 如果type是func的话，才会修改和查看
 	tmp.parakind = parakind;
 	tmp.paraname = paraname;

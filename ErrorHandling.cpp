@@ -208,9 +208,22 @@ vector<string> GetParKinds(string tmpname)
  // 字符串转数字
 int Str2Int(string tmpstr)
 {
+	int i = 0;
 	int sum = 0;
-	for (int i = 0; i < tmpstr.size(); i++) {
+	int sign = 1;
+
+	if (tmpstr.at(0) == '+') {
+		sign = 1;
+		i++;
+	}
+	else if (tmpstr.at(0) == '-') {
+		sign = -1;
+		i++;
+	}
+
+	
+	for (i; i < tmpstr.size(); i++) {
 		sum = sum * 10 + tmpstr[i] - '0';
 	}
-	return sum;
+	return sum*sign;
 }

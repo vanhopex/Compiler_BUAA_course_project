@@ -12,7 +12,6 @@ using namespace std;
 * 设计中间代码生成的时候，要时刻记住这个时间关系
 */
 
-
 // 所有中间代码存在这里
 vector<FourElements> middle_code; 
 
@@ -56,7 +55,7 @@ string  GenerateMidVar()
 // 退出表达式的时候将mid_var_num置0
 void SetVarNum0()
 {
-	mid_var_num = 0;
+	//mid_var_num = 0;
 }
 // 将语法分析的重载都写到这里来，结构清晰一点
 

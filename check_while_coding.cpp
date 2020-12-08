@@ -1,8 +1,8 @@
-#include "public.h"
 #include "work2.h"
 #include "work3.h"
 #include "ErrorHandling.h"
 #include "middle_code_generate.h"
+#include "check_while_coding.h"
 using namespace std;
 
 void PrintTable()
@@ -76,25 +76,3 @@ void PrintMiddleCode()
 	}
 }
 
-int main()
-{
-	// 读文件
-	ReadFiles();
-	// 执行work2
-	work2();
-	//常量说明
-	NextSym();
-	Program();
-
-	PrintTable();
-	PrintMiddleCode();
-
-	//FuncDefWithReturn();
-	//MainFunction();
-	//Statement();
-	// 输出到文件
-	Output2File();
-	// 关闭文件
-	CloseFiles();
-	return 0;
-}

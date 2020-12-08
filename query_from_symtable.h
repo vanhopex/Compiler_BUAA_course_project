@@ -8,6 +8,8 @@ pair<int, int> GetDemensions_GA(string arr_name);
 bool IsInLocalTable_GA(string var_name);
 //下面这些要等语法分析完了之后才能用 
 bool IsInLocalTable(string var_name, string func_name);
-int GetBaseOffset(string var_name, string func_name);
+int GetBaseOffsetInSP(string var_name, string func_name);
 pair<int, int> GetDemensions(string arr_name, string func_name);
+int  GetGlobaleVarSpace(string var_name);
+string GetKindOfVar(string var_name, string func_name);
 #endif

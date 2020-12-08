@@ -26,8 +26,8 @@ enum IR_OPS {
 	IR_FDEF, // 函数定义开始
 	IR_FEND, // 函数定义结束
 	IR_RTNV,
-	IR_ASS, // = 
-	IR_LW,
+	IR_ASS, //  ass value  offset res
+	IR_LW,   // lw var_name offset res
 	IR_SW,
 	IR_LV0,  // 取寄存器v0 的值
 	IR_SV0,  // 存值到V0

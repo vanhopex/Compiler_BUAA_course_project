@@ -95,6 +95,7 @@ int GetBaseOffset_GA(string var_name)
 
 
 /*
+* 
 * 下面这些要在语法分析完了之后才能用!!!
 *  
 */
@@ -102,14 +103,24 @@ int GetBaseOffset_GA(string var_name)
 // 根据函数名和变量名判断变量是不是在局部符号表（主要是用来判断中间变量的）
 bool IsInLocalTable(string var_name, string func_name) {
 
-	map<string, map<string, node>>::iterator iter = all_local_tables.find(func_name);
-	if (iter == all_local_tables.end()) {
-		//cout << "can not find function name" << endl;
+	if (func_name == "global") {
 		return false;
 	}
-	map<string, node>::iterator liter = iter->second.find(var_name);
 
-	return (liter != iter->second.end());
+	string tmpname = toLower(var_name);
+	// 在所有表中找对应函数表
+	map<string, map<string, node>>::iterator all_iter = all_local_tables.find(func_name);
+	if (all_iter == all_local_tables.end()) {
+		cout << "IsInLocalTable Error, can not find func_name:" + func_name << endl;
+	}
+	// 在内部表中找变量
+	map<string, node>::iterator local_iter = all_iter->second.begin();
+	while (local_iter != all_iter->second.end()) {
+		if (toLower(local_iter->first) == tmpname) return true;
+		local_iter++;
+	}
+	//cout << "IsInLocalTable Error,can not find var_name:" + var_name << endl;
+	return false;
 }
 
 // 得到数组变量的两个维度信息
@@ -124,35 +135,63 @@ pair<int, int> GetDemensions(string arr_name, string func_name) {
 }
 
 
-// 给出常量/变量/数组/参数的名字，在符号表中找它的初始偏移
-int GetBaseOffset(string var_name, string func_name)
+// 给出常量/变量/数组/参数的名字，在局部符号表中找它的初始偏移
+int GetBaseOffsetInSP(string var_name, string func_name)
 {
-	// 全局符号表
-	if (func_name == "global") {
-		map<string, node>::iterator iter = globalTable.find(var_name);
-		if (iter == globalTable.end()) {
-			cout << "can not find the var_name in global_table check your program!!!" << endl;
-		}
-		else {
-			return iter->second.offset;
-		}
+	string tmpname = toLower(var_name);
+	// 在所有表中找对应函数表
+	map<string, map<string, node>>::iterator all_iter = all_local_tables.find(func_name);
+	if (all_iter == all_local_tables.end()) {
+		cout << "GetKindOfVar Error, can not find func_name:" + func_name << endl;
 	}
-	// 局部符号表
+	// 在内部表中找变量
+	map<string, node>::iterator local_iter = all_iter->second.begin();
+	while (local_iter != all_iter->second.end()) {
+		if (toLower(local_iter->first) == tmpname) return local_iter->second.offset;
+		local_iter++;
+	}
+
+	cout << "GetBaseOffsetInSP Error,can not find var_name:" + var_name << endl;
+}
+
+// 得到全局变量的空间
+int  GetGlobaleVarSpace(string var_name)
+{
+	string tmpname = toLower(var_name);
+	map<string, node>::iterator iter = globalTable.begin();
+	while (iter != globalTable.end()) {
+		if (toLower(iter->first) == tmpname) return iter->second.space;
+		iter++;
+	}
+
+	cout << "GetGlobaleVarSpace Error! can not find Global_Name: " + var_name << endl;	
+}
+
+string GetKindOfVar(string var_name, string func_name) {
+	string tmpname = toLower(var_name);
+	// 全局变量
+	if (func_name == "global") {
+		map<string, node>::iterator iter = globalTable.begin();
+		while (iter != globalTable.end()) {
+			if (toLower(iter->first) == tmpname) return iter->second.kind;
+			iter++;
+		}
+		cout << "GetKindOfVar Error,can not find var_name:" + var_name << endl;
+	}
 	else {
+		// 在所有表中找对应函数表
 		map<string, map<string, node>>::iterator all_iter = all_local_tables.find(func_name);
 		if (all_iter == all_local_tables.end()) {
-			cout << "can not find the function name " << func_name <<  " in all_local_tables !!! check you program!" << endl;
+			cout << "GetKindOfVar Error, can not find func_name:" + func_name << endl;
 		}
-		map<string, node>::iterator local_iter = all_iter->second.find(var_name);
-		if (local_iter == all_iter->second.end()) {
-			cout << "can not find the var_name name " << var_name << "in local_tables !!! check you program!" << endl;
-		}
-		else {
-			return local_iter->second.offset;
+		// 在内部表中找变量
+		map<string, node>::iterator local_iter = all_iter->second.begin();
+		while (local_iter != all_iter->second.end()) {
+			if (toLower(local_iter->first) == tmpname) return local_iter->second.kind;
+			local_iter++;
 		}
 
+		cout << "GetKindOfVar Error,can not find var_name:" + var_name << endl;
 	}
-
-
-	return 0;
+	return "error";
 }

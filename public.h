@@ -78,6 +78,9 @@ struct node {
 	int d1 = 0; // 维度1
 	int d2 = 0; // 维度2
 
+	// 数组的初值放到下面的int数组里面
+	vector<int> initial_value_list;
+
 };
 
 //主map: 全局变量/常量 
@@ -106,6 +109,7 @@ extern string kind;
 extern int g_offset;
 extern string g_scope; // 
 extern int g_space;
+extern vector<int> g_initial_value_list; // 存放数组的初值
 //下面的不用管，只是为了凑够参数
 extern vector<string> parakind;
 extern vector<string> paraname;
