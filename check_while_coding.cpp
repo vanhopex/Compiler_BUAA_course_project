@@ -70,7 +70,7 @@ void PrintMiddleCode()
 {
 	vector<FourElements>::iterator iter = middle_code.begin();
 	while (iter != middle_code.end()) {
-		cout << GetIrOp(iter->op)  << " " << iter->r1 << " " << iter->r2 << " " << iter->res  << endl;
+		cout << GetIrOp(iter->op)  << " " << iter->r1 << " " << iter->r2 << " " << iter->res  << " " << iter->scope << endl;
 
 		iter++;
 	}

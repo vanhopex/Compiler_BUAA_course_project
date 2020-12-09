@@ -1691,7 +1691,7 @@ void IfStatement()
 	NextSym();
 	Requirement(middle_1, middle_2, cmp);
 	// 根据cmp(== != <= >= < >)生成不同的指令
-	Save2IR(FourElements(GetBranchIns(cmp), middle_1, middle_2, next));
+	Save2IR(FourElements(GetBranchIns(cmp), middle_1, middle_2, next, g_scope));
 
 	//)
 	if (sym != "RPARENT") Error('l');
@@ -1857,7 +1857,7 @@ void WhileStatement()
 		}
 		Statement();
 
-		Save2IR(FourElements(op, var_name2, i_length, var_name));
+		Save2IR(FourElements(op, var_name2, i_length, var_name, g_scope));
 
 		Save2IR(FourElements(IR_LABEL, "", "", test, g_scope));
 		Save2IR(FourElements(GetBranchIns(cmp), middle1, middle2, loop, g_scope));
