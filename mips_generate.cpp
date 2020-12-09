@@ -14,6 +14,7 @@ using namespace std;
 vector<TextElement> mips_text;
 vector<DataElement> mips_data;
 vector<AsciiElement> mips_ascii;
+bool first_func_call = true;
 
 int str_number = 0;
 string GenerateStrName()
@@ -249,7 +250,6 @@ void GotoIns(FourElements element)
 	
 }
 
-
 void CaseIns(FourElements element)
 {
 	// case var1 var2 label
@@ -422,7 +422,7 @@ void InIns(FourElements element)
 		// $v0存到栈空间里面
 
 		//Save2Text(TextElement(M_LI, "$t4", "", "", GetBaseOffsetInSP(var_name, element.scope)));
-		Save2Text(TextElement(M_SW, "$V0", "$fp", "", GetBaseOffsetInSP(var_name, element.scope)));
+		Save2Text(TextElement(M_SW, "$v0", "$fp", "", GetBaseOffsetInSP(var_name, element.scope)));
 	}
 	//Save2Text(TextElement(M_ENTER, "", "", "", 0));
 }
@@ -483,32 +483,85 @@ void OutIns(FourElements element)
 
 void PushIns(FourElements element)
 {
+	int no = Str2Int(element.r1);
 
+	string reg1 = "$t1";
+	SaveValue2Reg(reg1, element.res, element.scope);
+
+	if (no <= 3) {
+		Save2Text(TextElement(M_MOVE, "$a"+ element.r1, reg1, "",0));
+	}
+	// 这时候要
+	else {
+		Save2Text(TextElement(M_ADDI, "$sp", "$sp", "-4", 0));
+		Save2Text(TextElement(M_SW, reg1, "$sp", "", 0));
+	}
 }
 
 void CallIns(FourElements element)
 {
+	int num_of_values = Str2Int(element.r1);
+
 	Save2Text(TextElement(M_JAL,element.res, "", "", 0));
 	
+	// 小于4不用管
+	if (num_of_values > 4) {
+		Save2Text(TextElement(M_ADDI, "$sp", "$sp", to_string((num_of_values - 4)*4), 0));
+	}
+
 }
 
 
 void ParaIns(FourElements element)
 {
+	string para_name = element.res;
+	string scope = element.scope;
+	int no_of_para = Str2Int(element.r1);
 
+	
+	if (no_of_para <= 3) {
+		int offset = GetBaseOffsetInSP(para_name, scope);
+		Save2Text(TextElement(M_SW, "$a" + to_string(no_of_para), "$sp", "", offset));
+	}
 }
 
 
 void FdefIns(FourElements element)
 {
+	if (first_func_call) {
+		Save2Text(TextElement(M_J, "main", "", "", 0));
+		first_func_call = false;
+	}
+
+
+	int all_offsets = GetBaseOffsetInSP("all_offsets", element.scope);
+	int fp_offset = GetBaseOffsetInSP("reg_fp", element.scope);
+    int ra_offset = GetBaseOffsetInSP("reg_ra", element.scope);
+
 	Save2Text(TextElement(M_LABEL, element.res, "", "", 0));
-	// 下面是栈空间的分配，符号表中应该记录了整个栈空间的大小啊！！！
+	//// 下面是栈空间的分配，符号表中应该记录了整个栈空间的大小啊！！！
+	Save2Text(TextElement(M_ADDI, "$sp", "$sp","-" + to_string(all_offsets) , 0));
+	Save2Text(TextElement(M_SW, "$fp", "$sp","",fp_offset));
+	Save2Text(TextElement(M_SW, "$ra", "$sp", "", ra_offset));
+	Save2Text(TextElement(M_MOVE, "$fp", "$sp", "", 0));
+
 }
 
 void FendIns(FourElements element)
 {
+	string all_offsets = element.r1;
+	int fp_offset = GetBaseOffsetInSP("reg_fp", element.scope);
+	int ra_offset = GetBaseOffsetInSP("reg_ra", element.scope);
 
 	// 把栈空间填回去
+	Save2Text(TextElement(M_MOVE, "$sp", "$fp", "", 0));
+	Save2Text(TextElement(M_LW, "$fp", "$sp", "", fp_offset));
+	Save2Text(TextElement(M_LW, "$ra", "$sp", "", ra_offset));
+	Save2Text(TextElement(M_ADDI, "$sp", "$sp", all_offsets, 0));
+	if (element.res != "main") {
+		Save2Text(TextElement(M_JR, "$ra", "", "", 0));
+	}
+	
 }
 
 // 无用
@@ -596,11 +649,11 @@ void Lv0Ins(FourElements element)
 	// 局部变量
 	if (IsInLocalTable(res, element.scope)) {
 		int base_offset = GetBaseOffsetInSP(res, element.scope);
-		Save2Text(TextElement(M_LW, "$v0", "$fp", "", base_offset));
+		Save2Text(TextElement(M_SW, "$v0", "$fp", "", base_offset));
 	}
 	// 全局变量
 	else {
-		Save2Text(TextElement(M_LW, "$v0", res, "$0", 0));
+		Save2Text(TextElement(M_SW, "$v0", res, "$0", 0));
 	}
 }
 
@@ -730,6 +783,8 @@ void GenerateMipsCode()
 		}
 		Save2Text(TextElement(M_ENTER, "", "", "", 0));
 	}
+	Save2Text(TextElement(M_LI, "$v0", "", "", 10));
+	Save2Text(TextElement(M_SYSCALL, "", "", "", 0));
 }
 void OutputMipsCode()
 {
@@ -833,7 +888,7 @@ void OutputMipsCode()
 				printf("\tbeq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 				break;
 			case M_NEQ:
-				printf("\tneq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+				printf("\tbneq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 				break;
 			case M_BGTZ:
 				printf("\tbgtz %s %s \n", iter->r1.c_str(), iter->r2.c_str());
@@ -847,7 +902,9 @@ void OutputMipsCode()
 			case M_BLEZ:
 				printf("\tblez %s %s \n", iter->r1.c_str(), iter->r2.c_str());
 				break;
-
+			case M_JR:
+				printf("\tjr $ra\n");
+				break;
 			default:
 				printf("output_mips error! %d\n", iter->op);
 		}
@@ -855,6 +912,135 @@ void OutputMipsCode()
 		iter++;
 	}
 
+}
+
+void OutputMipsCode2Txt()
+{
+
+	// .data
+	fprintf(mips_file, "\n\n.data\n");
+	for (int i = 0; i < mips_data.size(); i++) {
+		fprintf(mips_file, "\t%s: %s %d\n", mips_data[i].name.c_str(), mips_data[i].type.c_str(), mips_data[i].space);
+	}
+
+	// .ascci
+	for (int i = 0; i < mips_ascii.size(); i++) {
+		fprintf(mips_file, "\t%s: %s \"%s\"\n", mips_ascii[i].name.c_str(), mips_ascii[i].type.c_str(), mips_ascii[i].content.c_str());
+	}
+
+	// .text
+	fprintf(mips_file, "\n.text\n");
+	vector<TextElement>::iterator iter = mips_text.begin();
+	while (iter != mips_text.end()) {
+		switch (iter->op) {
+		case M_ENTER:
+			printf("\n");
+			fprintf(mips_file, "\n");
+			break;
+			// li $t1,		,	 ,	num
+			// li $t1,	'a'	,	 , 
+		case M_LI:
+			if (iter->r2 == "") {
+				fprintf(mips_file, "\tli %s %d\n", iter->r1.c_str(), iter->num);
+			}
+			else {
+				fprintf(mips_file, "\tli %s %s\n", iter->r1.c_str(), iter->r2.c_str());
+			}
+
+			break;
+			// sw $t1, $fp, , offset
+			// sw $t1, $t2, , offset
+			// sw $t1, var_name, $t2, 0 
+		case M_SW:
+			if (iter->r2.at(0) == '$') {
+				fprintf(mips_file, "\tsw %s %d(%s)\n", iter->r1.c_str(), iter->num, iter->r2.c_str());
+			}
+			else {
+				fprintf(mips_file, "\tsw %s %s(%s)\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			}
+			break;
+			// lw $t1, $fp, , offset.
+			// lw $t1, $t2, , offset.
+			// lw $t1, var_name, $t2, 0 .
+		case M_LW:
+			if (iter->r2.at(0) == '$') {
+				fprintf(mips_file, "\tlw %s %d(%s)\n", iter->r1.c_str(), iter->num, iter->r2.c_str());
+			}
+			else {
+				fprintf(mips_file, "\tlw %s %s(%s)\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			}
+			break;
+			// addi $t1, $t2,  $t3, num.
+		case M_ADDI:
+			fprintf(mips_file, "\taddi %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			break;
+			// add $t3,  $t1,  $t2, .
+		case M_ADD:
+			fprintf(mips_file, "\tadd %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			break;
+		case M_SUB:
+			fprintf(mips_file, "\tsub %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			break;
+		case M_MUL:
+			fprintf(mips_file, "\tmult %s %s\n", iter->r1.c_str(), iter->r2.c_str());
+			break;
+		case M_DIV:
+			fprintf(mips_file, "\tdiv %s %s\n", iter->r1.c_str(), iter->r2.c_str());
+			break;
+			// mflo $t1,   ,   ,   .
+		case M_MFLO:
+			fprintf(mips_file, "\tmflo %s\n", iter->r1.c_str());
+			break;
+			// M_SYCALL,   ,    ,  .
+		case M_SYSCALL:
+			fprintf(mips_file, "\tsyscall\n");
+			break;
+			// M_LABEL , label_x,   ,  , .
+		case M_LABEL:
+			fprintf(mips_file, "%s:\n", iter->r1.c_str());
+			break;
+			// M_LA, $a0,  str_name,  ,   .
+		case M_LA:
+			fprintf(mips_file, "\tla %s %s\n", iter->r1.c_str(), iter->r2.c_str());
+			break;
+			// M_j, label, , , .
+		case M_J:
+			fprintf(mips_file, "\tj %s\n", iter->r1.c_str());
+			break;
+			// M_MOVE, $t1, $t2, , . t1 = t2
+		case M_MOVE:
+			fprintf(mips_file, "\tmove %s %s\n", iter->r1.c_str(), iter->r2.c_str());
+			break;
+		case M_JAL:
+			fprintf(mips_file, "\tjal %s\n", iter->r1.c_str());
+			break;
+		case M_BEQ:
+			fprintf(mips_file, "\tbeq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			break;
+		case M_NEQ:
+			fprintf(mips_file, "\tneq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			break;
+		case M_BGTZ:
+			fprintf(mips_file, "\tbgtz %s %s \n", iter->r1.c_str(), iter->r2.c_str());
+			break;
+		case M_BGEZ:
+			fprintf(mips_file, "\tbgez %s %s \n", iter->r1.c_str(), iter->r2.c_str());
+			break;
+		case M_BLTZ:
+			fprintf(mips_file, "\tbltz %s %s \n", iter->r1.c_str(), iter->r2.c_str());
+			break;
+		case M_BLEZ:
+			fprintf(mips_file, "\tblez %s %s \n", iter->r1.c_str(), iter->r2.c_str());
+			break;
+		case M_JR:
+			fprintf(mips_file, "\tjr $ra\n");
+			break;
+		default:
+			printf("output_mips error! %d\n", iter->op);
+		}
+		//printf("\n");
+		iter++;
+	}
 }
 
 int main()
@@ -874,10 +1060,9 @@ int main()
 
 	// 生成mips代码
 	GenerateMipsCode();
+
 	// 输出mips代码
-	OutputMipsCode();
-	// 输出到文件
-	Output2File();
+	OutputMipsCode2Txt();
 	// 关闭文件
 	CloseFiles();
 	return 0;

@@ -642,7 +642,7 @@ void ConstantDefinition()
 		Integer(r1); // 整数调用
 
 		Save2IR(FourElements(IR_CONST, "", "", var_name, g_scope));
-		Save2IR(FourElements(IR_ASS, r1, "", var_name, g_scope));
+		Save2IR(FourElements(IR_ASS, r1, "0", var_name, g_scope));
 		// 如果是整数调用完下一个是一个逗号
 		while (sym == "COMMA") {
 			SaveLex(); // 先保存这个COMMA
@@ -666,7 +666,7 @@ void ConstantDefinition()
 			Integer(r1); 
 
 			Save2IR(FourElements(IR_CONST, "", "", var_name, g_scope));
-			Save2IR(FourElements(IR_ASS, r1, "", var_name, g_scope));
+			Save2IR(FourElements(IR_ASS, r1, "0", var_name, g_scope));
 		}
 	}
 	// char
@@ -695,7 +695,7 @@ void ConstantDefinition()
 		r1 = "\'";
 		r1.append(word + "\'");
 		Save2IR(FourElements(IR_CONST,"", "", var_name, g_scope));
-		Save2IR(FourElements(IR_ASS, r1, "", var_name, g_scope));
+		Save2IR(FourElements(IR_ASS, r1, "0", var_name, g_scope));
 
 		NextSym(); // 下一个
 
@@ -724,7 +724,7 @@ void ConstantDefinition()
 			r1.append(word + "\'");
 
 			Save2IR(FourElements(IR_CONST,"", "", var_name, g_scope));
-			Save2IR(FourElements(IR_ASS, r1, "", var_name, g_scope));
+			Save2IR(FourElements(IR_ASS, r1, "0", var_name, g_scope));
 
 			NextSym(); // 下一个
 		}
@@ -1484,9 +1484,10 @@ void ReturnStatement()
 	SaveGrammer("<返回语句>"); /*BUG5: 这里没写！*/
 }
 //＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}｜＜空＞
-void ValueParameterTable()
+void ValueParameterTable(int& num_of_values)
 {
 	string exp = "";
+	int value_no = 0;
 	// ) 即为空/////////////////////////////////////////////////////////////////////
 	if (sym != "RPARENT" && sym != "SEMICN") {
 
@@ -1494,7 +1495,7 @@ void ValueParameterTable()
 		
 		if (typeOfExpr == "char") valueParameters.push_back("char");
 		else					  valueParameters.push_back("int");
-		Save2IR(FourElements(IR_PUSH, "", "", exp, g_scope));
+		Save2IR(FourElements(IR_PUSH, to_string(value_no++), "", exp, g_scope));
 		// ,
 		while (sym == "COMMA") {
 			SaveLex();
@@ -1503,9 +1504,11 @@ void ValueParameterTable()
 
 			if (typeOfExpr == "char") valueParameters.push_back("char");
 			else					  valueParameters.push_back("int");
-			Save2IR(FourElements(IR_PUSH, "", "", exp, g_scope));
+			Save2IR(FourElements(IR_PUSH, to_string(value_no++), "", exp, g_scope));
 		}
 	}
+
+	num_of_values = value_no;
 	SaveGrammer("<值参数表>");
 }
 ////＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'   
@@ -1540,6 +1543,8 @@ void ValueParameterTable()
 //＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'   
 void FunctionWithReturn()
 {
+	int num_of_values;
+
 	string func_name;
 	valueParameters.clear();
 	// 标识符
@@ -1554,7 +1559,7 @@ void FunctionWithReturn()
 	SaveLex();
 	// 值参数表
 	NextSym();
-	ValueParameterTable();
+	ValueParameterTable(num_of_values);
 	// 比较两个vector是否相等
 	if (valueParameters.size() !=  parameterList.size()) Error('d');
 	// 可以直接比较
@@ -1567,7 +1572,7 @@ void FunctionWithReturn()
 		NextSym();
 	}
 	SaveGrammer("<有返回值函数调用语句>");
-	Save2IR(FourElements(IR_CALL,"","",func_name, g_scope));
+	Save2IR(FourElements(IR_CALL,to_string(num_of_values),"",func_name, g_scope));
 	//string middle1 = " "///////////////////
 	//Save2IR(FourElements(IR_RTNV, "", "", "", g_scope)); // 这里翻译成返回值值已经存到v0了
 	//result = middle1;
@@ -1575,6 +1580,7 @@ void FunctionWithReturn()
 // ＜无返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
 void FunctionWithoutReturn()
 {
+	int num_of_values;
 	string func_name = "";
 	valueParameters.clear();
 	SaveLex();
@@ -1586,7 +1592,7 @@ void FunctionWithoutReturn()
 	SaveLex();
 	// 值参数表
 	NextSym();
-	ValueParameterTable();
+	ValueParameterTable(num_of_values);
 	// 比较两个vector是否相等
 	if (valueParameters.size() != parameterList.size()) Error('d');
 	// 可以直接比较
@@ -1598,7 +1604,7 @@ void FunctionWithoutReturn()
 		NextSym();
 	}
 	SaveGrammer("<无返回值函数调用语句>");
-	Save2IR(FourElements(IR_CALL, "", "", func_name, g_scope));
+	Save2IR(FourElements(IR_CALL, to_string(num_of_values), "", func_name, g_scope));
 
 }
 //＜条件＞::=  ＜表达式＞＜关系运算符＞＜表达式＞     
@@ -2046,7 +2052,20 @@ void MainFunction()
 
 	SaveGrammer("<主函数>");
 	NextSym();
-	Save2IR(FourElements(IR_FEND, "", "", "main", g_scope));
+
+	//fp
+	name = "reg_fp";
+	Save2LocalTable();
+	g_offset += 4;
+	// ra
+	name = "reg_ra";
+	Save2LocalTable();
+	g_offset += 4;
+
+	name = "all_offsets";
+	Save2LocalTable();
+
+	Save2IR(FourElements(IR_FEND, to_string(g_offset), "", "main", g_scope));
 	isInFuncDef = false;
 	//
 	all_local_tables["main"] = localTable;
@@ -2065,35 +2084,113 @@ void DeclareHead()
 	SaveGrammer("<声明头部>");
 	NextSym();
 }
+////＜参数表＞    ::=  ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}| ＜空＞
+//void ParameterTable()
+//{
+//
+//	if (sym == "INTTK" || sym == "CHARTK") {
+//		SaveLex();
+//		if (sym == "INTTK") {
+//			parakind.push_back("int");
+//		}
+//		else {
+//			parakind.push_back("char");
+//		}
+//		//标识符
+//		NextSym();
+//		paraname.push_back(word);
+//
+//		defType[word] = true;
+//		// 
+//
+//		// 
+//		NextSym();
+//		while (sym == "COMMA") {
+//			SaveLex();
+//			// 类型标识符
+//			NextSym();
+//			SaveLex();
+//
+//			if (sym == "INTTK") {parakind.push_back("int");}
+//			else {parakind.push_back("char");}
+//
+//			//标识符
+//			NextSym();
+//			SaveLex();
+//			paraname.push_back(word);
+//			Save2IR(FourElements(IR_PARA, "", "", word, g_scope));
+//			NextSym();
+//		}
+//	}
+//	// else 就是空 ，不用处理，直接输出
+//	SaveGrammer("<参数表>");
+//}
+//＜有返回值函数定义＞  ::=  ＜声明头部＞'('＜参数表＞')' '{'＜复合语句＞'}'  
+
 //＜参数表＞    ::=  ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}| ＜空＞
 void ParameterTable()
 {
-	node tmp_para;
-	tmp_para.type = "para"; // 参数类型
 
 	if (sym == "INTTK" || sym == "CHARTK") {
 		SaveLex();
-		if (sym == "INTTK") {
-			parakind.push_back("int");
-			tmp_para.kind = "int";
+		if (sym == "INTTK") parakind.push_back("int");
+		else				parakind.push_back("char");
+		//标识符
+		NextSym();
+		SaveLex();
+		defType[word] = true;
+		paraname.push_back(word);
+		
+		// 
+		NextSym();
+		while (sym == "COMMA") {
+			SaveLex();
+			// 类型标识符
+			NextSym();
+			SaveLex();
+
+
+			if (sym == "INTTK") parakind.push_back("int");
+			else				parakind.push_back("char");
+
+			//标识符
+			NextSym();
+			SaveLex();
+			defType[word] = true;
+			paraname.push_back(word);
+			// 
+			NextSym();
 		}
-		else {
-			parakind.push_back("char");
-			tmp_para.kind = "char";
+	}
+	// else 就是空 ，不用处理，直接输出
+	SaveGrammer("<参数表>");
+}
+
+// 重载
+void ParameterTable(vector<pair<string, string>>& parameter_list)
+{
+	string parameter_kind, parameter_name;
+	int para_no = 0;
+
+	if (sym == "INTTK" || sym == "CHARTK") {
+		SaveLex();
+		if (sym == "INTTK") { 
+			parakind.push_back("int");
+			parameter_kind = "int";
+		}
+		else { 
+			parakind.push_back("char"); 
+			parameter_kind = "char";
 		}
 		//标识符
 		NextSym();
-		paraname.push_back(word);
-		tmp_para.name = word;
-		tmp_para.scope = g_scope;
-		tmp_para.offset = g_offset;
-		g_offset += 4;
-		//将参数保存到localTable
-		localTable[tmp_para.name] = tmp_para;
-		defType[word] = true;
-		// 
-		Save2IR(FourElements(IR_PARA,"","",word, g_scope));
+		SaveLex();
 
+		paraname.push_back(word);
+		parameter_name = word;
+		parameter_list.push_back(make_pair(parameter_name, parameter_kind));
+		Save2IR(FourElements(IR_PARA, to_string(para_no++), "", word, g_scope));
+		defType[word] = true;
 		// 
 		NextSym();
 		while (sym == "COMMA") {
@@ -2104,42 +2201,34 @@ void ParameterTable()
 
 			if (sym == "INTTK") {
 				parakind.push_back("int");
-				tmp_para.kind = "int";
+				parameter_kind = "int";
 			}
 			else {
 				parakind.push_back("char");
-				tmp_para.kind = "char";
+				parameter_kind = "char";
 			}
 
 			//标识符
 			NextSym();
 			SaveLex();
 			paraname.push_back(word);
+			parameter_name = word;
+			parameter_list.push_back(make_pair(parameter_name, parameter_kind));
+			Save2IR(FourElements(IR_PARA, to_string(para_no++), "", word, g_scope));
+			defType[word] = true;
 
-			tmp_para.name = word;
-			//将参数保存到localTable
-			tmp_para.scope = g_scope;
-			tmp_para.offset = g_offset;
-
-			g_offset += 4;
-			localTable[tmp_para.name] = tmp_para;
-			Save2IR(FourElements(IR_PARA, "", "", word, g_scope));
-
-
-		///////////////////////////////////////////////////////这里也可以用Save2Table///// 下面也要改
-			// 
 			NextSym();
 		}
 	}
 	// else 就是空 ，不用处理，直接输出
 	SaveGrammer("<参数表>");
 }
-//＜有返回值函数定义＞  ::=  ＜声明头部＞'('＜参数表＞')' '{'＜复合语句＞'}'  
+
 void FuncDefWithReturn()
 {
 	g_offset = 0;
-	
 	string func_name;
+	vector<pair<string, string>> parameter_list;
 
 	NTKclear();
 	//parakind.clear(); //参数表清空
@@ -2163,7 +2252,7 @@ void FuncDefWithReturn()
 	// 参数表
 	NextSym();
 	//ValueParameterTable();/*BUG0: 看错了定义，这里应该调用的是参数表，不是值参数表*/
-	ParameterTable();
+	ParameterTable(parameter_list);
 
 	// 把函数的信息放到全局变量里面
 	Save2Table();
@@ -2171,7 +2260,6 @@ void FuncDefWithReturn()
 	Save2LocalTable();
 	//)
 	if (sym != "RPARENT") Error('l');
-
 	else {
 		SaveLex();
 		// {
@@ -2193,12 +2281,59 @@ void FuncDefWithReturn()
 	SaveGrammer("<有返回值函数定义>");
 	NextSym();
 
-	Save2IR(FourElements(IR_FEND, "","",func_name, g_scope));
+	// 给 $fp, $31
+	// fp
+	name = "reg_fp";
+	Save2LocalTable();
+	g_offset += 4;
+	// ra
+	name = "reg_ra";
+	Save2LocalTable();
+	g_offset += 4; 
+
+
+	// 在函数定义的最后统一将所有参数参数存到符号表中
+	// 下面分配的是参数的栈空间
+	int para_num = parameter_list.size();
+	type = "para";
+	if (para_num <= 4) {
+		for (int i = 0; i < para_num; i++) {
+			name = parameter_list[i].first;
+			kind = parameter_list[i].second;
+
+			Save2LocalTable();
+			g_offset += 4;
+
+		}
+	}
+	else {
+		// 0 1 2 3 存到 a0 ~ a3
+		for (int i = 0; i < 4; i++) {
+			name = parameter_list[i].first;
+			kind = parameter_list[i].second;
+
+			Save2LocalTable();
+			g_offset += 4;
+
+		}
+		// n n-1 n-2 ,,, 4 倒着存到栈中
+		for (int i = para_num - 1; i >= 4; i--) {
+			name = parameter_list[i].first;
+			kind = parameter_list[i].second;
+
+			Save2LocalTable();
+			g_offset += 4;
+		}
+	}
+	
+	name = "all_offsets";
+	Save2LocalTable();
+
+	Save2IR(FourElements(IR_FEND, to_string(g_offset),"",func_name, g_scope));
+
 
 	isInFuncDef = false;
-
 	all_local_tables[func_name] = localTable;
-
 	localTable.clear();
 }
 // ＜无返回值函数定义＞  ::= void＜标识符＞'('＜参数表＞')''{'＜复合语句＞'}'
@@ -2206,6 +2341,7 @@ void FuncDefWithoutReturn()
 {
 	g_offset = 0;
 	string func_name;
+	vector<pair<string, string>> parameter_list;
 
 	NTKclear();
 	//parakind.clear();
@@ -2230,7 +2366,7 @@ void FuncDefWithoutReturn()
 	SaveLex();
 	// 参数表
 	NextSym();
-	ParameterTable(); /*BUG*/ 
+	ParameterTable(parameter_list); /*BUG*/ 
 	//}
 	if (sym != "RPARENT") Error('l');
 	else {
@@ -2256,10 +2392,60 @@ void FuncDefWithoutReturn()
 
 	SaveGrammer("<无返回值函数定义>");
 	NextSym();
-	isInFuncDef = false;
-	Save2IR(FourElements(IR_FEND, "", "", func_name, g_scope));
-	all_local_tables[func_name] = localTable;
 
+	
+	// 给 $fp, $31
+	// fp
+	name = "reg_fp";
+	Save2LocalTable();
+	g_offset += 4;
+	// ra
+	name = "reg_ra";
+	Save2LocalTable();
+	g_offset += 4;
+
+	// 在函数定义的最后统一将所有参数参数存到符号表中
+
+	// 下面分配的是参数的栈空间
+	int para_num = parameter_list.size();
+	type = "para";
+	if (para_num <= 4) {
+		for (int i = 0; i < para_num; i++) {
+			name = parameter_list[i].first;
+			kind = parameter_list[i].second;
+
+			Save2LocalTable();
+			g_offset += 4;
+
+		}
+	}
+	else {
+		// 0 1 2 3 存到 a0 ~ a3
+		for (int i = 0; i < 4; i++) {
+			name = parameter_list[i].first;
+			kind = parameter_list[i].second;
+
+			Save2LocalTable();
+			g_offset += 4;
+
+		}
+		// n n-1 n-2 ,,, 4 倒着存到栈中
+		for (int i = para_num - 1; i >= 4; i--) {
+			name = parameter_list[i].first;
+			kind = parameter_list[i].second;
+
+			Save2LocalTable();
+			g_offset += 4;
+		}
+	}
+	// 把总的offset放入local table
+	name = "all_offsets";
+	Save2LocalTable();
+
+	isInFuncDef = false;
+	Save2IR(FourElements(IR_FEND, to_string(g_offset), "", func_name, g_scope));
+
+	all_local_tables[func_name] = localTable;
 	localTable.clear();
 }
 // ＜程序＞    ::= ［＜常量说明＞］［＜变量说明＞］{＜有返回值函数定义＞|＜无返回值函数定义＞}＜主函数＞ 

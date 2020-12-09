@@ -9,7 +9,7 @@ int totalLen; // the length of the text
 int cur = 0; // global pointer
 int slength = 0;
 //文件相关
-FILE* fp, * out, *errorfile;
+FILE* fp, * out, *errorfile, *mips_file;
 int MAX_LINE = 100;
 char buffer[100];
 bool isFirstInLine = false;

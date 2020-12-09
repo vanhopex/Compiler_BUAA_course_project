@@ -371,14 +371,14 @@ void ReadFiles()
 		printf("Can not open testfile!");
 		exit(1);
 	}
-	if ((out = fopen("output.txt", "w+")) == NULL) {
-		printf("Can not open out file!");
-		exit(1);
-	}
-	/*if ((errorfile = fopen("error.txt", "w+")) == NULL) {
+	/*if ((out = fopen("output.txt", "w+")) == NULL) {
 		printf("Can not open out file!");
 		exit(1);
 	}*/
+	if ((mips_file = fopen("mips.txt", "w+")) == NULL) {
+		printf("Can not open mips file!");
+		exit(1);
+	}
 
 	while (fgets(buffer, MAX_LINE, fp) != NULL) {
 		strcat(text, buffer);
@@ -388,7 +388,8 @@ void ReadFiles()
 void CloseFiles()
 {
 	fclose(fp);
-	fclose(out);
+	//fclose(out);
+	fclose(mips_file);
 	//fclose(errorfile);
 }
 

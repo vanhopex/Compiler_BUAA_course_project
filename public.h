@@ -21,7 +21,7 @@ extern int totalLen; // the length of the text
 extern int cur; // global pointer
 extern int slength;
 //
-extern FILE* fp, * out, *errorfile;
+extern FILE* fp, * out, *errorfile, *mips_file;
 extern int MAX_LINE;
 extern char buffer[100];
 extern bool isFirstInLine;

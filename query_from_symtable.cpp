@@ -150,7 +150,7 @@ int GetBaseOffsetInSP(string var_name, string func_name)
 		if (toLower(local_iter->first) == tmpname) return local_iter->second.offset;
 		local_iter++;
 	}
-
+	return -1;
 	cout << "GetBaseOffsetInSP Error,can not find var_name:" + var_name << endl;
 }
 
@@ -163,7 +163,7 @@ int  GetGlobaleVarSpace(string var_name)
 		if (toLower(iter->first) == tmpname) return iter->second.space;
 		iter++;
 	}
-
+	return 4;
 	cout << "GetGlobaleVarSpace Error! can not find Global_Name: " + var_name << endl;	
 }
 

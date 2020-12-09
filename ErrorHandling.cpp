@@ -222,7 +222,7 @@ int Str2Int(string tmpstr)
 	}
 
 	
-	for (i; i < tmpstr.size(); i++) {
+	for (; i < tmpstr.size(); i++) {
 		sum = sum * 10 + tmpstr[i] - '0';
 	}
 	return sum*sign;
