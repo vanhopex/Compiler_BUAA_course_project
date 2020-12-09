@@ -1648,7 +1648,7 @@ void Requirement(string& middle_1, string& middle_2, string& cmp)
 
 	
 }
-IR_OPS GetBranchIns(string op)
+IR_OPS GetOppositeBranchIns(string op)
 {
 	if (op == "==") {
 		return IR_NEQ; // bne 
@@ -1657,16 +1657,44 @@ IR_OPS GetBranchIns(string op)
 		return IR_EQ;
 	}
 	else if (op == ">") {
-		return IR_LT;
-	}
-	else if (op == "<") {
-		return IR_GT;
-	}
-	else if (op == ">=") {
 		return IR_LET;
 	}
-	else if (op == "<=") {
+	else if (op == "<") {
 		return IR_GET;
+	}
+	else if (op == ">=") {
+		return IR_LT;
+	}
+	else if (op == "<=") {
+		return IR_GT;
+	}
+	else {
+		exit(1);
+	}
+}
+
+
+IR_OPS GetBranchIns(string op)
+{
+	if (op == "==") {
+		return IR_EQ; // bne 
+	}
+	else if (op == "!=") {
+		return IR_NEQ;
+	}
+	else if (op == ">") {
+		return IR_GT;
+		
+	}
+	else if (op == "<") {
+		return IR_LT;
+		
+	}
+	else if (op == ">=") {
+		return IR_GET;
+	}
+	else if (op == "<=") {
+		return IR_LET;
 	}
 	else {
 		exit(1);
@@ -1691,7 +1719,7 @@ void IfStatement()
 	NextSym();
 	Requirement(middle_1, middle_2, cmp);
 	// 根据cmp(== != <= >= < >)生成不同的指令
-	Save2IR(FourElements(GetBranchIns(cmp), middle_1, middle_2, next, g_scope));
+	Save2IR(FourElements(GetOppositeBranchIns(cmp), middle_1, middle_2, next, g_scope));
 
 	//)
 	if (sym != "RPARENT") Error('l');

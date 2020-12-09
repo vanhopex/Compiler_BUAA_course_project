@@ -335,7 +335,7 @@ void GtIns(FourElements element)
 	SaveValue2Reg(reg1, r1, scope);
 	SaveValue2Reg(reg2, r2, scope);
 	Save2Text(TextElement(M_SUB, reg3, reg1, reg2, 0));
-	Save2Text(TextElement(M_BGTZ,label, "", "", 0));
+	Save2Text(TextElement(M_BGTZ,reg3,label, "", 0));
 }
 
 void LtIns(FourElements element)
@@ -351,7 +351,7 @@ void LtIns(FourElements element)
 	SaveValue2Reg(reg1, r1, scope);
 	SaveValue2Reg(reg2, r2, scope);
 	Save2Text(TextElement(M_SUB, reg3, reg1, reg2, 0));
-	Save2Text(TextElement(M_BLTZ, label, "", "", 0));
+	Save2Text(TextElement(M_BLTZ, reg3, label, "", 0));
 }
 
 void GetIns(FourElements element)
@@ -367,7 +367,7 @@ void GetIns(FourElements element)
 	SaveValue2Reg(reg1, r1, scope);
 	SaveValue2Reg(reg2, r2, scope);
 	Save2Text(TextElement(M_SUB, reg3, reg1, reg2, 0));
-	Save2Text(TextElement(M_BGEZ, label, "", "", 0));
+	Save2Text(TextElement(M_BGEZ, reg3, label, "", 0));
 }
 
 void LetIns(FourElements element)
@@ -384,7 +384,7 @@ void LetIns(FourElements element)
 	SaveValue2Reg(reg2, r2, scope);
 	Save2Text(TextElement(M_SUB, reg3, reg1, reg2, 0));
 
-	Save2Text(TextElement(M_BLEZ, label, "", "", 0));
+	Save2Text(TextElement(M_BLEZ, reg3, label,  "", 0));
 }
 
 void InIns(FourElements element)
@@ -586,13 +586,15 @@ void AssIns(FourElements element)
 	reg1 = SaveR1_Reg1(value, element);
 
 	/* 把offset放到$t2寄存器中 */
-	reg2 = SaveR2_Reg2(offset, element);
+	//reg2 = SaveR2_Reg2(offset, element);
 
 	/* 把value 写入 var_name + offset*/
 		// res是局部变量
 	if (IsInLocalTable(res, element.scope)) {
-		Save2Text(TextElement(M_ADD, "$t2", "$fp", "$t2", 0));
-		Save2Text(TextElement(M_SW, "$t1", "$t2", "", 0));
+		int base_offset = GetBaseOffsetInSP(res, element.scope);
+		Save2Text(TextElement(M_SW, "$t1", "$fp", "", base_offset + Str2Int(offset)));
+		/*Save2Text(TextElement(M_ADD, "$t2", "$fp", "$t2", 0));
+		Save2Text(TextElement(M_SW, "$t1", "$t2", "", 0));*/
 	}
 	// res是全局变量
 	else {
@@ -1062,6 +1064,7 @@ int main()
 	GenerateMipsCode();
 
 	// 输出mips代码
+	OutputMipsCode();
 	OutputMipsCode2Txt();
 	// 关闭文件
 	CloseFiles();
