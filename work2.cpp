@@ -380,6 +380,11 @@ void ReadFiles()
 		exit(1);
 	}
 
+	if ((mid_file = fopen("mid.txt", "w+")) == NULL) {
+		printf("Can not open mid file!");
+		exit(1);
+	}
+
 	while (fgets(buffer, MAX_LINE, fp) != NULL) {
 		strcat(text, buffer);
 	}
@@ -389,6 +394,7 @@ void CloseFiles()
 {
 	fclose(fp);
 	//fclose(out);
+	fclose(mid_file);
 	fclose(mips_file);
 	//fclose(errorfile);
 }

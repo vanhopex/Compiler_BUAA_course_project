@@ -71,7 +71,7 @@ void PrintMiddleCode()
 	vector<FourElements>::iterator iter = middle_code.begin();
 	while (iter != middle_code.end()) {
 		cout << GetIrOp(iter->op)  << " " << iter->r1 << " " << iter->r2 << " " << iter->res  << endl;
-
+		fprintf(mid_file, "%s %s %s %s\n", GetIrOp(iter->op).c_str(), iter->r1.c_str(), iter->r2.c_str(), iter->res.c_str());
 		iter++;
 	}
 }

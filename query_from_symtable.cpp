@@ -6,18 +6,13 @@
 #include "query_from_symtable.h"
 using namespace std;
 
-
-// 
 /*
 * 我用GA表示GrammerAnalysis
 * 下面这个后面带GA的就是在语法分析的时候查阅符号表所用的函数
 * 
 * 然后根据全局变量isInFuncDef来判断是查 globalTable 还是 localTable
 * 
-* ///////////////////////注意变量名不区分大小写， 调用 Error Handling 里面的toLower
-* 
-* 
-
+* //注意变量名不区分大小写， 调用 Error Handling 里面的toLower
 */
 
 // 根据函数名和变量名判断变量是不是在局部符号表（主要是用来判断中间变量的）
@@ -35,6 +30,12 @@ bool IsInLocalTable_GA(string var_name) {
 	}
 
 	return false;
+}
+
+//设置变量的类型
+void SetVarKindInLocalTable_GA(string var_name)
+{
+
 }
 
 // 得到数组变量的两个维度信息 / 局部函数会引用全局变量的数组，所以局部符号表查不到，就要查全局符号表
@@ -106,7 +107,6 @@ bool IsInLocalTable(string var_name, string func_name) {
 	if (func_name == "global") {
 		return false;
 	}
-
 	string tmpname = toLower(var_name);
 	// 在所有表中找对应函数表
 	map<string, map<string, node>>::iterator all_iter = all_local_tables.find(func_name);
@@ -144,13 +144,15 @@ int GetBaseOffsetInSP(string var_name, string func_name)
 	if (all_iter == all_local_tables.end()) {
 		cout << "GetKindOfVar Error, can not find func_name:" + func_name << endl;
 	}
+
 	// 在内部表中找变量
 	map<string, node>::iterator local_iter = all_iter->second.begin();
 	while (local_iter != all_iter->second.end()) {
 		if (toLower(local_iter->first) == tmpname) return local_iter->second.offset;
 		local_iter++;
 	}
-	return -1;
+	return 1024;
+
 	cout << "GetBaseOffsetInSP Error,can not find var_name:" + var_name << endl;
 }
 
@@ -191,6 +193,12 @@ string GetKindOfVar(string var_name, string func_name) {
 			local_iter++;
 		}
 
+		//  在全局变量找
+		map<string, node>::iterator iter = globalTable.begin();
+		while (iter != globalTable.end()) {
+			if (toLower(iter->first) == tmpname) return iter->second.kind;
+			iter++;
+		}
 		cout << "GetKindOfVar Error,can not find var_name:" + var_name << endl;
 	}
 	return "error";

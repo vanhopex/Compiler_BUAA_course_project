@@ -47,7 +47,7 @@ void SaveValue2Reg(string reg_name, string value_name, string scope)
 	}
 	// 数字
 	else if ((value_name.at(0) <= '9' && value_name.at(0) >= '0') || value_name.at(0) == '+' || value_name.at(0) == '-') {
-		Save2Text(TextElement(M_LI, reg_name, value_name, "", 0));
+		Save2Text(TextElement(M_ADDI, reg_name,"$0" , value_name, 0));
 	}
 	// 变量
 	else {
@@ -127,11 +127,14 @@ void AddIns(FourElements element)
 	string r1 = element.r1;
 	string r2 = element.r2;
 	string res = element.res;
-	string reg1, reg2;
-	/* 把r1放到$t1寄存器中 */
-	reg1 = SaveR1_Reg1(r1, element);
-	/* 把r2放到$t2寄存器中 */
-	reg2 = SaveR2_Reg2(r2, element);
+
+	string reg1 = "$t1";
+	string reg2 = "$t2";
+
+	SaveValue2Reg(reg1, r1, element.scope);
+
+	SaveValue2Reg(reg2, r2, element.scope);
+
 
 	Save2Text(TextElement(M_ADD, "$t3", reg1, reg2, 0));
 
@@ -154,11 +157,12 @@ void SubIns(FourElements element)
 	string r1 = element.r1;
 	string r2 = element.r2;
 	string res = element.res;
-	string reg1, reg2;
-	/* 把r1放到$t1寄存器中 */
-	reg1 = SaveR1_Reg1(r1, element);
-	/* 把r2放到$t2寄存器中 */
-	reg2 = SaveR2_Reg2(r2, element);
+	string reg1 = "$t1";
+	string reg2 = "$t2";
+
+	SaveValue2Reg(reg1, r1, element.scope);
+
+	SaveValue2Reg(reg2, r2, element.scope);
 
 	Save2Text(TextElement(M_SUB, "$t3", reg1, reg2, 0));
 
@@ -182,14 +186,27 @@ void DivIns(FourElements element)
 	string r1 = element.r1;
 	string r2 = element.r2;
 	string res = element.res;
-	string reg1, reg2;
-	/* 把r1放到$t1寄存器中 */
-	reg1 = SaveR1_Reg1(r1, element);
-	/* 把r2放到$t2寄存器中 */
-	reg2 = SaveR2_Reg2(r2, element);
+	string reg1 = "$t1";
+	string reg2 = "$t2";
 
-	Save2Text(TextElement(M_DIV, reg1, reg2, "", 0));
-	Save2Text(TextElement(M_MFLO, "$t3", "", "", 0));
+	if (r1 == "0") {
+		Save2Text(TextElement(M_LI, "$t3", "", "", 0));
+
+	}
+	else if (Str2Int(r2) == 2) {
+		SaveValue2Reg(reg1, r1, element.scope);
+
+		Save2Text(TextElement(M_SRL, "$t3", reg1, "", 1));
+	}
+	else {
+		SaveValue2Reg(reg1, r1, element.scope);
+
+		SaveValue2Reg(reg2, r2, element.scope);
+
+		Save2Text(TextElement(M_DIV, reg1, reg2, "", 0));
+		Save2Text(TextElement(M_MFLO, "$t3", "", "", 0));
+	}
+	
 	/*把$t1存进res*/
 
 	// 看要赋值的变量是全局还是局部
@@ -212,15 +229,31 @@ void MulIns(FourElements element)
 	string r1 = element.r1;
 	string r2 = element.r2;
 	string res = element.res;
-	string reg1, reg2;
-	/* 把r1放到$t1寄存器中 */
-	reg1 = SaveR1_Reg1(r1, element);
-	/* 把r2放到$t2寄存器中 */
-	reg2 = SaveR2_Reg2(r2, element);
+	string reg1 = "$t1";
+	string reg2 = "$t2";
 
-	Save2Text(TextElement(M_MUL, reg1, reg2, "", 0));
-	Save2Text(TextElement(M_MFLO, "$t3", "", "", 0));
-	/*把$t1存进res*/
+	if (r1 == "0" || r2 == "0") {
+		Save2Text(TextElement(M_LI, "$t3", "", "", 0));
+
+	}
+	else if (Str2Int(r2) == 2) {
+		SaveValue2Reg(reg1, r1, element.scope);
+
+		Save2Text(TextElement(M_SLL, "$t3", reg1, "", 1));
+	}
+	else if (Str2Int(r2) == 4) {
+		SaveValue2Reg(reg1, r1, element.scope);
+
+		Save2Text(TextElement(M_SLL, "$t3", reg1, "",  2));
+	}
+	else {
+		SaveValue2Reg(reg1, r1, element.scope);
+
+		SaveValue2Reg(reg2, r2, element.scope);
+
+		Save2Text(TextElement(M_MUL, reg1, reg2, "", 0));
+		Save2Text(TextElement(M_MFLO, "$t3", "", "", 0));
+	}
 
 	// 看要赋值的变量是全局还是局部
 
@@ -261,6 +294,7 @@ void CaseIns(FourElements element)
 
 	string reg1 = "$t1";
 	string reg2 = "$t2";
+
 	SaveValue2Reg(reg1, r1, scope);
 	SaveValue2Reg(reg2, r2, scope);
 
@@ -272,9 +306,10 @@ void MinusIns(FourElements element)
 {
 	string r1 = element.r1;
 	string res = element.res;
-	string reg1;
-	/* 把r1放到$t1寄存器中 */
-	reg1 = SaveR1_Reg1(r1, element);
+	string reg1 = "$t1";
+	
+	SaveValue2Reg(reg1, r1, element.scope);
+
 
 	Save2Text(TextElement(M_SUB, "$t3", "$0", reg1, 0));
 
@@ -390,47 +425,57 @@ void LetIns(FourElements element)
 void InIns(FourElements element)
 {
 	string var_name = element.res;
-	string type = GetKindOfVar(var_name, element.scope);
+	string var_kind = GetKindOfVar(var_name, element.scope);
+	int sys_num;
+
+	if (var_kind == "char") {
+		sys_num = 12;
+	}
+	else if (var_kind == "int") {
+		sys_num = 5;
+	}
+	else {
+		sys_num = 12;
+		cout << "InIsn Error!" << endl;
+	}
+
+	Save2Text(TextElement(M_LI, "$v0", "", "", sys_num));
+
+	Save2Text(TextElement(M_SYSCALL, "", "", "", 0));
 
 	// 全局变量读入放到内存中
-	if (element.scope == "global") {
-		// char
-		if (type == "char") {
-			Save2Text(TextElement(M_LI, "$v0", "", "", 12));
-		}
-		// int 
-		else {
-			Save2Text(TextElement(M_LI, "$v0", "", "", 5));
-		}
-		Save2Text(TextElement(M_SYSCALL, "", "", "", 0));
+	if (!IsInLocalTable(var_name, element.scope)) {
 		Save2Text(TextElement(M_SW, "$v0", var_name, "$0", 0));
-		//Save2Text("sw $v0 0(" + var_name + ")");
-
 	}
 	// 局部变量读入放入到栈对应的偏移中
 	else {
-		// char
-		if (type == "char") {
-			Save2Text(TextElement(M_LI, "$v0", "", "", 12));
-		}
-		// int 
-		else {
-			Save2Text(TextElement(M_LI, "$v0", "", "", 5));
-		}
-		Save2Text(TextElement(M_SYSCALL, "", "", "", 0));
-
 		// $v0存到栈空间里面
-
-		//Save2Text(TextElement(M_LI, "$t4", "", "", GetBaseOffsetInSP(var_name, element.scope)));
 		Save2Text(TextElement(M_SW, "$v0", "$fp", "", GetBaseOffsetInSP(var_name, element.scope)));
 	}
-	//Save2Text(TextElement(M_ENTER, "", "", "", 0));
 }
+
+string  GetOutputKind(string content, string scope)
+{
+	// 字符
+	if (content.at(0) == '\'') {
+		return "char";
+	}
+	// 数字
+	else if ((content.at(0) <= '9' && content.at(0) >= '0') || content.at(0) == '+' || content.at(0) == '-') {
+		return "int";
+	}
+	// 变量
+	else {
+		return GetKindOfVar(content, scope);
+	}
+
+}
+
 void OutIns(FourElements element)
 {
 	string type = element.r1;
 	string content = element.res;
-	int sys_num = 0;
+	int sys_num;
 	string scope = element.scope;
 	// 判断输出的类型
 	if (type == "string") {
@@ -443,32 +488,18 @@ void OutIns(FourElements element)
 		
 		sys_num = 4;
 	}
-	else if (type == "int") {
-		string reg = "$a0";
 
+	else if (type == "var") {
+		string reg = "$a0";
 		SaveValue2Reg(reg, content, scope);
 
-		//string reg1 = SaveR1_Reg1(content, element);
+		string kind = GetOutputKind(content, scope);
 
-		//Save2Text(TextElement(M_ADDI, "$a0", "$t1", "0", 0)); // 或者这里可以直接把寄存器的名字$a0传进去
+		if (kind == "int") sys_num = 1;
+		else			   sys_num = 11;
 
-
-		sys_num = 1;
 	}
-	else if (type == "char") {
 
-		string reg = "$a0";
-
-		SaveValue2Reg(reg, content, scope);
-
-//		string reg1 = SaveR1_Reg1(content, element);
-
-//		Save2Text(TextElement(M_ADDI, "$a0", "$t1", "0", 0)); // 或者这里可以直接把寄存器的名字$a0传进去
-
-
-
-		sys_num = 11;
-	}
 	// 输出换行符
 	else if (type == "enter") {
 
@@ -483,19 +514,15 @@ void OutIns(FourElements element)
 
 void PushIns(FourElements element)
 {
-	int no = Str2Int(element.r1);
+	//int no = Str2Int(element.r1);
 
 	string reg1 = "$t1";
 	SaveValue2Reg(reg1, element.res, element.scope);
 
-	if (no <= 3) {
-		Save2Text(TextElement(M_MOVE, "$a"+ element.r1, reg1, "",0));
-	}
-	// 这时候要
-	else {
-		Save2Text(TextElement(M_ADDI, "$sp", "$sp", "-4", 0));
-		Save2Text(TextElement(M_SW, reg1, "$sp", "", 0));
-	}
+
+	Save2Text(TextElement(M_ADDI, "$sp", "$sp", "-4", 0));
+	Save2Text(TextElement(M_SW, reg1, "$sp", "", 0));
+
 }
 
 void CallIns(FourElements element)
@@ -504,25 +531,15 @@ void CallIns(FourElements element)
 
 	Save2Text(TextElement(M_JAL,element.res, "", "", 0));
 	
-	// 小于4不用管
-	if (num_of_values > 4) {
-		Save2Text(TextElement(M_ADDI, "$sp", "$sp", to_string((num_of_values - 4)*4), 0));
+	if (num_of_values > 0) {
+		Save2Text(TextElement(M_ADDI, "$sp", "$sp", to_string(num_of_values*4), 0));
 	}
-
 }
 
 
 void ParaIns(FourElements element)
 {
-	string para_name = element.res;
-	string scope = element.scope;
-	int no_of_para = Str2Int(element.r1);
 
-	
-	if (no_of_para <= 3) {
-		int offset = GetBaseOffsetInSP(para_name, scope);
-		Save2Text(TextElement(M_SW, "$a" + to_string(no_of_para), "$sp", "", offset));
-	}
 }
 
 
@@ -539,6 +556,7 @@ void FdefIns(FourElements element)
     int ra_offset = GetBaseOffsetInSP("reg_ra", element.scope);
 
 	Save2Text(TextElement(M_LABEL, element.res, "", "", 0));
+
 	//// 下面是栈空间的分配，符号表中应该记录了整个栈空间的大小啊！！！
 	Save2Text(TextElement(M_ADDI, "$sp", "$sp","-" + to_string(all_offsets) , 0));
 	Save2Text(TextElement(M_SW, "$fp", "$sp","",fp_offset));
@@ -549,15 +567,15 @@ void FdefIns(FourElements element)
 
 void FendIns(FourElements element)
 {
-	string all_offsets = element.r1;
+	int all_offsets = GetBaseOffsetInSP("all_offsets", element.scope);
 	int fp_offset = GetBaseOffsetInSP("reg_fp", element.scope);
 	int ra_offset = GetBaseOffsetInSP("reg_ra", element.scope);
-
+	//int num_of_paras = Str2Int(element.r2);
 	// 把栈空间填回去
 	Save2Text(TextElement(M_MOVE, "$sp", "$fp", "", 0));
 	Save2Text(TextElement(M_LW, "$fp", "$sp", "", fp_offset));
 	Save2Text(TextElement(M_LW, "$ra", "$sp", "", ra_offset));
-	Save2Text(TextElement(M_ADDI, "$sp", "$sp", all_offsets, 0));
+	Save2Text(TextElement(M_ADDI, "$sp", "$sp", to_string(all_offsets), 0));
 	if (element.res != "main") {
 		Save2Text(TextElement(M_JR, "$ra", "", "", 0));
 	}
@@ -570,6 +588,8 @@ void RtnvIns(FourElements element)
 
 }
 
+
+
 void AssIns(FourElements element)
 {
 
@@ -580,21 +600,20 @@ void AssIns(FourElements element)
 	string offset = element.r2;
 	string res = element.res;
 
-	string reg1, reg2;
-
+	string reg1 = "$t1";
+	string reg2 = "$t2";
 	/* 把value放到$t1寄存器中 */
-	reg1 = SaveR1_Reg1(value, element);
-
+	SaveValue2Reg(reg1, value, element.scope);
 	/* 把offset放到$t2寄存器中 */
-	//reg2 = SaveR2_Reg2(offset, element);
-
+	SaveValue2Reg(reg2, offset, element.scope);
 	/* 把value 写入 var_name + offset*/
 		// res是局部变量
 	if (IsInLocalTable(res, element.scope)) {
 		int base_offset = GetBaseOffsetInSP(res, element.scope);
-		Save2Text(TextElement(M_SW, "$t1", "$fp", "", base_offset + Str2Int(offset)));
-		/*Save2Text(TextElement(M_ADD, "$t2", "$fp", "$t2", 0));
-		Save2Text(TextElement(M_SW, "$t1", "$t2", "", 0));*/
+		//Save2Text(TextElement(M_SW, "$t1", "$fp", "", base_offset + Str2Int(offset)));
+		Save2Text(TextElement(M_ADDI, "$t2", "$t2", to_string(base_offset), 0));
+		Save2Text(TextElement(M_ADD, "$t2", "$fp", "$t2", 0));
+		Save2Text(TextElement(M_SW, "$t1", "$t2", "", 0));
 	}
 	// res是全局变量
 	else {
@@ -614,15 +633,16 @@ void LwIns(FourElements element)
 
 	string reg1 = "$t1";
 	string reg2 = "$t2";
-
 // offset 存到reg2
 	SaveValue2Reg(reg2, offset, scope);
+
 // (var_name + offset).value 存到reg1
 	if (IsInLocalTable(var_name, element.scope)) {
 		// 基础偏移
 		int base_offset = GetBaseOffsetInSP(var_name, element.scope);
 		// 总的偏移存到reg2
 		Save2Text(TextElement(M_ADDI,reg2, reg2,to_string(base_offset),0));
+
 		//  把$fp + reg2 的值存到 reg1
 		Save2Text(TextElement(M_ADD, reg2, "$fp", reg2, 0));
 		Save2Text(TextElement(M_LW, reg1, reg2, "", 0));
@@ -635,14 +655,13 @@ void LwIns(FourElements element)
 /*把reg1值存入到res*/
 	if (IsInLocalTable(res, element.scope)) {
 		int base_offset = GetBaseOffsetInSP(res, element.scope);
-		Save2Text(TextElement(M_SW, "$t1", "$fp", "", base_offset));
+		Save2Text(TextElement(M_SW, reg1, "$fp", "", base_offset));
 	}
 	// 全局变量
 	else {
-		Save2Text(TextElement(M_SW, "$t1", res, "$0", 0));
+		Save2Text(TextElement(M_SW, reg1, res, "$0", 0));
 	}
 
-	Save2Text(TextElement(M_ENTER, "", "", "", 0));
 }
 
 void Lv0Ins(FourElements element)
@@ -651,19 +670,19 @@ void Lv0Ins(FourElements element)
 	// 局部变量
 	if (IsInLocalTable(res, element.scope)) {
 		int base_offset = GetBaseOffsetInSP(res, element.scope);
-		Save2Text(TextElement(M_SW, "$v0", "$fp", "", base_offset));
+		Save2Text(TextElement(M_SW, "$v1", "$fp", "", base_offset));
 	}
 	// 全局变量
 	else {
-		Save2Text(TextElement(M_SW, "$v0", res, "$0", 0));
+		Save2Text(TextElement(M_SW, "$v1", res, "$0", 0));
 	}
 }
 
 void Sv0Ins(FourElements element)
 {
-	string reg = "$t1";
-	SaveValue2Reg(reg, element.r1, element.scope);
-	Save2Text(TextElement(M_MOVE, "$v0", reg, "", 0));  // v0 = reg
+	string reg1 = "$t1";
+	SaveValue2Reg(reg1, element.r1, element.scope);
+	Save2Text(TextElement(M_MOVE, "$v1", reg1, "", 0));  // v0 = reg
 }
 
 void VarIns(FourElements element)
@@ -890,7 +909,7 @@ void OutputMipsCode()
 				printf("\tbeq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 				break;
 			case M_NEQ:
-				printf("\tbneq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+				printf("\tbne %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 				break;
 			case M_BGTZ:
 				printf("\tbgtz %s %s \n", iter->r1.c_str(), iter->r2.c_str());
@@ -918,6 +937,7 @@ void OutputMipsCode()
 
 void OutputMipsCode2Txt()
 {
+
 
 	// .data
 	fprintf(mips_file, "\n\n.data\n");
@@ -948,7 +968,6 @@ void OutputMipsCode2Txt()
 			else {
 				fprintf(mips_file, "\tli %s %s\n", iter->r1.c_str(), iter->r2.c_str());
 			}
-
 			break;
 			// sw $t1, $fp, , offset
 			// sw $t1, $t2, , offset
@@ -974,14 +993,14 @@ void OutputMipsCode2Txt()
 			break;
 			// addi $t1, $t2,  $t3, num.
 		case M_ADDI:
-			fprintf(mips_file, "\taddi %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			fprintf(mips_file, "\taddiu %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 			break;
 			// add $t3,  $t1,  $t2, .
 		case M_ADD:
-			fprintf(mips_file, "\tadd %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			fprintf(mips_file, "\taddu %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 			break;
 		case M_SUB:
-			fprintf(mips_file, "\tsub %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			fprintf(mips_file, "\tsubu %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 			break;
 		case M_MUL:
 			fprintf(mips_file, "\tmult %s %s\n", iter->r1.c_str(), iter->r2.c_str());
@@ -1020,7 +1039,7 @@ void OutputMipsCode2Txt()
 			fprintf(mips_file, "\tbeq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 			break;
 		case M_NEQ:
-			fprintf(mips_file, "\tneq %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
+			fprintf(mips_file, "\tbne %s %s %s\n", iter->r1.c_str(), iter->r2.c_str(), iter->r3.c_str());
 			break;
 		case M_BGTZ:
 			fprintf(mips_file, "\tbgtz %s %s \n", iter->r1.c_str(), iter->r2.c_str());
@@ -1036,6 +1055,12 @@ void OutputMipsCode2Txt()
 			break;
 		case M_JR:
 			fprintf(mips_file, "\tjr $ra\n");
+			break;
+		case M_SLL:
+			fprintf(mips_file, "\tsll %s %s %d\n", iter->r1.c_str(), iter->r2.c_str(), iter->num);
+			break;
+		case M_SRL:
+			fprintf(mips_file, "\tsrl %s %s %d\n", iter->r1.c_str(), iter->r2.c_str(), iter->num);
 			break;
 		default:
 			printf("output_mips error! %d\n", iter->op);
@@ -1062,11 +1087,14 @@ int main()
 
 	// 生成mips代码
 	GenerateMipsCode();
-
+	
 	// 输出mips代码
-	OutputMipsCode();
+	//OutputMipsCode();
+	
+	/*Save2Text(TextElement(M_LI, "$v0", "", "", 10));
+	Save2Text(TextElement(M_SYSCALL, "", "", "", 0));*/
 	OutputMipsCode2Txt();
-	// 关闭文件
+	 //关闭文件
 	CloseFiles();
 	return 0;
 }

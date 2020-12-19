@@ -108,7 +108,6 @@ void Program();
 // 输出到文件
 void Output2File();
 
-int GetLine();
 
 string GetVarOffset(string arr_name, string d1, string d2);
 #endif // ! __WORK3_

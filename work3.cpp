@@ -5,18 +5,18 @@
 #include "middle_code_generate.h"
 #include "query_from_symtable.h"
 using namespace std;
-// 
-int GetOffset(int space)
-{
-	int tmp = g_offset;
-	g_offset += space;
-	return tmp;
-}
+
 // 查看下一个单词和类别码
 void NextSym()
 {
 	sym = s[symcur].symbolx;
-	word = s[symcur].wordx;
+	if (sym == "IDENFR") {
+		word = toLower(s[symcur].wordx);
+	}
+	else {
+		word = s[symcur].wordx;
+	}
+	
 	gline = s[symcur].line;
 	for (int i = 0; i < errorA.size(); i++) {
 		if (gline == errorA[i]) {
@@ -29,10 +29,7 @@ void NextSym()
 		symcur++;
 	}
 }
-int GetLine()
-{
-	return s[symcur].line;
-}
+
 // 查看当前单词开始后面第k个单词的类别码
 string Peek(int k)
 {
@@ -258,17 +255,15 @@ void VariableInitialized(string var_name)
 	int l1 = 0;
 	int l2 = 0;
 
-	//g_initial_value_list.clear();
-
-
-	SaveLex(); // 保存 = 
-	//
+	// 保存 = 
+	SaveLex();
+	// 
 	NextSym();
 	if (sym == "LBRACE") {
 		SaveLex(); // {
+
 		// { {c,... } , {}}
 		NextSym();
-
 		if (sym == "LBRACE") {
 			string r1 = "";
 			int offset = 0;
@@ -356,13 +351,13 @@ void VariableInitialized(string var_name)
 			}
 			if (demension1 != l1) Error('n');
 		}
+
 		// {c...}
 		else {
 			int offset = 0;
-			string r1 = "";
 
+			string r1 = "";
 			Constant(r1);
-			//g_initial_value_list.push_back(r1);
 			Save2IR(FourElements(IR_ASS, r1, to_string(offset), var_name, g_scope));
 			r1 = "";
 			offset += 4;
@@ -373,9 +368,7 @@ void VariableInitialized(string var_name)
 				SaveLex();
 				//常量
 				NextSym();
-
 				Constant(r1);
-				//g_initial_value_list.push_back(r1);
 				Save2IR(FourElements(IR_ASS, r1, to_string(offset), var_name, g_scope));
 				r1 = "";
 				offset += 4;
@@ -393,7 +386,6 @@ void VariableInitialized(string var_name)
 	else {
 		string r1 = "";
 		Constant(r1);
-		//g_initial_value_list.push_back(r1);
 		Save2IR(FourElements(IR_ASS, r1, "0", var_name, g_scope));
 		if (typeOfConstant != GetIdentifierKind(varNameInitialized)) Error('o');
 	}
@@ -428,17 +420,19 @@ void VariableUninitialized()
 		if (sym == "LBRACK") {
 			while (sym == "LBRACK") {
 				SaveLex();
+
+				string t = "";
 				// 无符号整数
 				NextSym();
+				IntegerWithoutSign(t);
 				if (i == 0) {
-					demension1 = Str2Int(word);
+					demension1 = Str2Int(t);
 					i++;
 				}
 				else {
-					demension2 = Str2Int(word);
+					demension2 = Str2Int(t);
 				}
 
-				IntegerWithoutSign();
 				// 
 				if (sym != "RBRACK") Error('m');
 				else {
@@ -459,21 +453,8 @@ void VariableUninitialized()
 		}
 
 		Save2Table();
+		g_offset += g_space;
 		g_space = 4;
-
-
-		if (demension1 == 0 && demension2 == 0) {
-			g_offset += 4;
-		}
-		else if (demension1 != 0 && demension2 == 0) {
-			g_offset += demension1 * 4;
-			g_space = demension1 * 4;
-		}
-		else {
-			g_offset += demension1 * demension2 * 4;
-			g_space = demension1 * demension2 * 4;
-		}
-
 
 		Save2IR(FourElements(IR_VAR, "", "", var_name, g_scope));
 	}
@@ -510,22 +491,21 @@ void VariableDefinition()
 		while (sym == "LBRACK") {
 			SaveLex();
 
+			string t = "";
 			// 无符号整数
 			NextSym();
+			IntegerWithoutSign(t);
 			if (i == 0) {
-				demension1 = Str2Int(word);
+				demension1 = Str2Int(t);
 				i++;
 			}
 			else {
-				demension2 = Str2Int(word);
+				demension2 = Str2Int(t);
 			}
-
-			IntegerWithoutSign();
 			// 
 			if (sym != "RBRACK") Error('m');
 			else {
 				SaveLex();
-
 				NextSym();
 			}
 		}
@@ -545,35 +525,22 @@ void VariableDefinition()
 	}
 
 	Save2Table();
+	g_offset += g_space;
 	g_space = 4;
 
-
-	if (demension1 == 0 && demension2 == 0) {
-		g_offset += 4;
-	}
-	else if (demension1 != 0 && demension2 == 0) {
-		g_offset += demension1 * 4;
-		g_space = demension1 * 4;
-	}
-	else {
-		g_offset += demension1 * demension2 * 4;
-		g_space = demension1 * demension2 * 4;
-	}
-	
 
 	// 下一个是等号的话，就是有初始化，否则无初始化
 	if (sym == "ASSIGN") {
 		Save2IR(FourElements(IR_VAR, "", "", var_name, g_scope));
 		VariableInitialized(var_name);
-		
 	}
 	else {
 		Save2IR(FourElements(IR_VAR, "", "", var_name, g_scope));
-		VariableUninitialized();
-		
+		VariableUninitialized();	
 	}
 	SaveGrammer("<变量定义>");
 }
+
 //＜变量说明＞  ::= ＜变量定义＞;{＜变量定义＞;} 
 // 因为变量定义和声明头部前面几个一样，所以需要区分
 void VariableExplanation()
@@ -894,7 +861,12 @@ void Factor(string& result)
 		//
 		NextSym();
 		//这里可能会出错，('a') 应该是字符型// 上次是将括号嵌套的，这次再想想别的办法；
-		Expression(result);
+		string t = "";
+		Expression(t);
+		string middle_var = GenerateMidVar("int");
+		Save2IR(FourElements(IR_ASS, t, "0", middle_var, g_scope));
+		result = middle_var;
+		// 把result的类型设置成int
 
 		if (sym != "RPARENT") Error('l');
 
@@ -908,9 +880,7 @@ void Factor(string& result)
 		string tmpname = word;
 
 		FunctionWithReturn();
-		string mid_var = GenerateMidVar();
-		Save2IR(FourElements(IR_LV0, "", "", mid_var, g_scope));
-		result = mid_var;
+		
 
 		if (GetFuncKind(tmpname) == "char") {
 			typeOfExpr = "char";
@@ -918,6 +888,10 @@ void Factor(string& result)
 		else {
 			typeOfExpr = "int";
 		}
+
+		string mid_var = GenerateMidVar(typeOfExpr);
+		Save2IR(FourElements(IR_LV0, "", "", mid_var, g_scope));
+		result = mid_var;
 	}
 	// 标识符
 	else {
@@ -933,7 +907,8 @@ void Factor(string& result)
 			typeOfIdentifier = "char";
 		}
 		// 数组
-		string t1, t2;
+		string t1 = "";
+		string 	t2 = "";
 		int i = 0;
 		NextSym();
 		//[
@@ -966,19 +941,18 @@ void Factor(string& result)
 
 			}
 		}
-		if (t1.empty() && t2.empty()) {
+		typeOfExpr = typeOfIdentifier;
+
+		if (t1=="" && t2=="") {
 			result = arr_name;
 		}
 		else {
-			string offset = GetVarOffset(arr_name, t1, t2);
-			string middle2 = GenerateMidVar();
-			Save2IR(FourElements(IR_LW, arr_name, offset, middle2,g_scope)); // 生成目标代码时判断arr_name是全局还是局部，根据offset来生成不同的目标代码
+			string middle2 = GenerateMidVar(typeOfExpr);
+			Save2IR(FourElements(IR_LW, arr_name, GetVarOffset(arr_name, t1, t2), middle2,g_scope)); // 生成目标代码时判断arr_name是全局还是局部，根据offset来生成不同的目标代码
 			
 			result = middle2;
 		}
 		
-
-		typeOfExpr = typeOfIdentifier;
 	}
 	SaveGrammer("<因子>");
 }
@@ -1021,8 +995,8 @@ void Term(string& result)
 		string r2 = factors_stack.top();
 		factors_stack.pop();
 
-		string res = GenerateMidVar();
-		factors_stack.push(res);
+		string res = GenerateMidVar("int");
+		
 
 		if (op == "*") {
 			Save2IR(FourElements(IR_MUL, r2, r1, res, g_scope));
@@ -1030,6 +1004,8 @@ void Term(string& result)
 		else {
 			Save2IR(FourElements(IR_DIV, r2, r1, res, g_scope));
 		}
+
+		factors_stack.push(res);
 	}
 	result = factors_stack.top();
 	SaveGrammer("<项>");
@@ -1080,7 +1056,7 @@ void Expression(string& result)
 	
 
 	if (flag) {
-		string middle_var1 = GenerateMidVar();
+		string middle_var1 = GenerateMidVar("int");
 		Save2IR(FourElements(IR_MINUS, t, "", middle_var1, g_scope));
 		terms_stack.push(middle_var1);
 	}
@@ -1103,8 +1079,8 @@ void Expression(string& result)
 		string r2 = terms_stack.top();
 		terms_stack.pop();
 
-		string res = GenerateMidVar();
-		terms_stack.push(res);
+		string res = GenerateMidVar("int");
+		
 
 		if (op == "+") {
 			Save2IR(FourElements(IR_ADD, r2, r1, res, g_scope));
@@ -1112,6 +1088,8 @@ void Expression(string& result)
 		else {
 			Save2IR(FourElements(IR_SUB, r2, r1, res, g_scope));
 		}
+
+		terms_stack.push(res);
 
 	}
 	result = terms_stack.top();
@@ -1141,6 +1119,28 @@ void ReadStatement()
 	SaveGrammer("<读语句>");
 	NextSym();
 }
+
+//去除转义：
+string RemoveTra(string s) {
+
+	string ans;
+
+	char p[1000];
+	int k = 0;
+	for (int i = 0; i < s.length(); i++) {
+		if (s[i] == '\\') {
+			p[k++] = '\\';
+			p[k++] = '\\';
+		}
+		else {
+			p[k++] = s[i];
+		}
+	}
+	p[k] = '\0';
+	ans = p;
+	return ans;
+}
+
 //＜写语句＞    ::= printf '(' ＜字符串＞,＜表达式＞ ')'| printf '('＜字符串＞ ')'| printf '('＜表达式＞')' 
 void WriteStatement()
 {
@@ -1156,7 +1156,7 @@ void WriteStatement()
 	NextSym();
 	if (sym == "STRCON") {
 		StringG(str);
-		Save2IR(FourElements(IR_OUT,"string", "", str, g_scope));
+		Save2IR(FourElements(IR_OUT,"string", "", RemoveTra(str), g_scope));
 
 		if (sym == "COMMA") {
 			SaveLex();
@@ -1164,13 +1164,13 @@ void WriteStatement()
 			NextSym();
 			Expression(exp);
 
-			Save2IR(FourElements(IR_OUT, typeOfExpr, "", exp, g_scope));
+			Save2IR(FourElements(IR_OUT, "var", "", exp, g_scope));
 		}
 	}
 	else {
 		Expression(exp);
 	
-		Save2IR(FourElements(IR_OUT, typeOfExpr, "", exp, g_scope));
+		Save2IR(FourElements(IR_OUT, "var", "", exp, g_scope));
 	}
 
 	Save2IR(FourElements(IR_OUT, "enter", "", "\n", g_scope)); // 输出换行符
@@ -1226,7 +1226,8 @@ void CaseSubStatement(queue<pair<string, string>>& value_label_queue, string nex
 	if (sym != "CASETK") error();
 	SaveLex();
 	// 常量
-	string t_middle = GenerateMidVar();
+	//string t_middle = GenerateMidVar();
+	string t_middle = "";
 
 	NextSym();
 	Constant(t_middle);
@@ -1321,12 +1322,12 @@ void SwitchStatement()
 //根据 d1 d2 算偏移
 string GetVarOffset(string arr_name, string d1, string d2)
 {
-	if (d1.empty()) {
+	if (d1=="") {
 		return "0";
 	}
 	// a[d1]
-	else if (d2.empty()) {
-		string middle_var1 = GenerateMidVar();
+	else if (d2=="") {
+		string middle_var1 = GenerateMidVar("int");
 		Save2IR(FourElements(IR_MUL, d1, to_string(4), middle_var1, g_scope));
 		return middle_var1;
 	}
@@ -1334,9 +1335,9 @@ string GetVarOffset(string arr_name, string d1, string d2)
 	else {
 		pair<int, int> demensions = GetDemensions_GA(arr_name);
 
-		string middle_var1 = GenerateMidVar();
-		string middle_var2 = GenerateMidVar();
-		string middle_var3 = GenerateMidVar();
+		string middle_var1 = GenerateMidVar("int");
+		string middle_var2 = GenerateMidVar("int");
+		string middle_var3 = GenerateMidVar("int");
 		//string middle_var4 = GenerateMidVar();
 
 		Save2IR(FourElements(IR_MUL, d1, to_string(demensions.second), middle_var1, g_scope));
@@ -1347,32 +1348,6 @@ string GetVarOffset(string arr_name, string d1, string d2)
 		return middle_var3;
 	}
 
-
-	/*int	base_offset = GetBaseOffset_GA(arr_name); 
-	// a
-	if (d1.empty()) {
-		return to_string(base_offset);
-	}
-	// a[d1]
-	else if (d2.empty()) {
-		string middle_var1 = GenerateMidVar();
-		Save2IR(FourElements(IR_ADD, d1, to_string(base_offset), middle_var1, g_scope));
-		return middle_var1;
-	}
-	// a[d1][d2]
-	else {
-		pair<int, int> demensions = GetDemensions_GA(arr_name);
-
-		string middle_var1 = GenerateMidVar();
-		string middle_var2 = GenerateMidVar();
-		string middle_var3 = GenerateMidVar();
-		//string middle_var4 = GenerateMidVar();
-
-		Save2IR(FourElements(IR_MUL, d1, to_string(demensions.second), middle_var1, g_scope));
-		Save2IR(FourElements(IR_ADD, middle_var1, d2, middle_var2, g_scope));
-		Save2IR(FourElements(IR_ADD, to_string(base_offset), middle_var2, middle_var3, g_scope));
-		return middle_var3;
-	} */
 }
 // ＜赋值语句＞   ::=  ＜标识符＞＝＜表达式＞|＜标识符＞'['＜表达式＞']'=＜表达式＞|＜标识符＞'['＜表达式＞']''['＜表达式＞']' =＜表达式＞
 void AssignStatement()
@@ -1388,7 +1363,8 @@ void AssignStatement()
 	if (GetType(word) == "const") Error('j');
 	if (!IsDefined(word)) Error('c');
 	// [
-	string t1, t2;
+	string t1 = "";
+	string t2 = "";
 	int i = 0;
 	//bool is_array = false;
 	NextSym();
@@ -1459,7 +1435,8 @@ void ReturnStatement()
 		}
 		string t = "";
 		Expression(t);
-		Save2IR(FourElements(IR_SV0,t,"","",g_scope));
+
+		Save2IR(FourElements(IR_SV0, t,"","",g_scope));
 		
 		// return int;
 		if ((GetFuncKindInLocal() == "int" || GetFuncKindInLocal() == "char") && GetFuncKindInLocal() != typeOfExpr) {
@@ -1482,64 +1459,46 @@ void ReturnStatement()
 	}
 	//else error();
 	SaveGrammer("<返回语句>"); /*BUG5: 这里没写！*/
+
+
+	Save2IR(FourElements(IR_GOTO, "", "", g_scope + "_end", g_scope));
 }
 //＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}｜＜空＞
 void ValueParameterTable(int& num_of_values)
 {
 	string exp = "";
 	int value_no = 0;
+	vector<pair<string, int>> value_list;
 	// ) 即为空/////////////////////////////////////////////////////////////////////
 	if (sym != "RPARENT" && sym != "SEMICN") {
 
 		Expression(exp);
-		
+		value_list.push_back(make_pair(exp,value_no++));
+
 		if (typeOfExpr == "char") valueParameters.push_back("char");
 		else					  valueParameters.push_back("int");
-		Save2IR(FourElements(IR_PUSH, to_string(value_no++), "", exp, g_scope));
+
+		//Save2IR(FourElements(IR_PUSH, to_string(value_no++), "", exp, g_scope));
 		// ,
 		while (sym == "COMMA") {
 			SaveLex();
 			NextSym(); /*BUG7:进表达式之前又忘记调用了*/ 
 			Expression(exp);
+			value_list.push_back(make_pair(exp, value_no++));
 
 			if (typeOfExpr == "char") valueParameters.push_back("char");
 			else					  valueParameters.push_back("int");
-			Save2IR(FourElements(IR_PUSH, to_string(value_no++), "", exp, g_scope));
+			//Save2IR(FourElements(IR_PUSH, to_string(value_no++), "", exp, g_scope));
 		}
+	}
+
+	for (int i = 0; i < value_list.size(); i++) {
+		Save2IR(FourElements(IR_PUSH, to_string(value_list[i].second), " ", value_list[i].first, g_scope));
 	}
 
 	num_of_values = value_no;
 	SaveGrammer("<值参数表>");
 }
-////＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'   
-//void FunctionWithReturn()
-//{
-//	valueParameters.clear();
-//	// 标识符
-//	SaveLex();
-//	vector<string> parameterList = GetParKinds(word);
-//	// 
-//	/*BUG*/
-//	// (
-//	NextSym();
-//	SaveLex();
-//	// 值参数表
-//	NextSym();
-//	ValueParameterTable();
-//	// 比较两个vector是否相等
-//	if (valueParameters.size() != parameterList.size()) Error('d');
-//	// 可以直接比较
-//	else if (valueParameters != parameterList) Error('e');
-//	valueParameters.clear();
-//	//)
-//	if (sym != "RPARENT") Error('l');
-//	else {
-//		SaveLex();
-//		NextSym();
-//	}
-//	SaveGrammer("<有返回值函数调用语句>");
-//
-//}
 //＜有返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'   
 void FunctionWithReturn()
 {
@@ -1572,10 +1531,7 @@ void FunctionWithReturn()
 		NextSym();
 	}
 	SaveGrammer("<有返回值函数调用语句>");
-	Save2IR(FourElements(IR_CALL,to_string(num_of_values),"",func_name, g_scope));
-	//string middle1 = " "///////////////////
-	//Save2IR(FourElements(IR_RTNV, "", "", "", g_scope)); // 这里翻译成返回值值已经存到v0了
-	//result = middle1;
+	Save2IR(FourElements(IR_CALL, to_string(num_of_values),"",func_name, g_scope));
 }
 // ＜无返回值函数调用语句＞ ::= ＜标识符＞'('＜值参数表＞')'
 void FunctionWithoutReturn()
@@ -1782,7 +1738,7 @@ void WhileStatement()
 	loop = GenerateLabel();
 
 	if (sym == "WHILETK") {
-
+		
 		// while
 		SaveLex();
 		//(
@@ -1790,9 +1746,14 @@ void WhileStatement()
 		SaveLex();
 		//条件
 		NextSym();
-		Requirement(middle1, middle2, cmp);
-		Save2IR(FourElements(IR_GOTO, "","",test, g_scope));
+
 		Save2IR(FourElements(IR_LABEL, "", "", loop, g_scope));
+		Requirement(middle1, middle2, cmp);
+		Save2IR(FourElements(GetOppositeBranchIns(cmp), middle1, middle2, next, g_scope));
+
+
+		//Save2IR(FourElements(IR_GOTO, "", "", test, g_scope));
+		
 		// )
 		if (sym != "RPARENT") Error('l');
 		else {
@@ -1802,12 +1763,14 @@ void WhileStatement()
 		}
 		Statement();
 
-		Save2IR(FourElements(IR_LABEL, "","", test, g_scope));
-		Save2IR(FourElements(GetBranchIns(cmp), middle1, middle2, loop, g_scope));
+		Save2IR(FourElements(IR_GOTO, "", "", loop, g_scope));
+		Save2IR(FourElements(IR_LABEL, "","", next, g_scope));
+		
 	}
 	else if (sym == "FORTK") {
 		string var_name = "";
 		string t = "";
+		//bool flag_goto = ture;
 		//for
 		SaveLex();
 		//(
@@ -1837,10 +1800,13 @@ void WhileStatement()
 			// 条件
 			NextSym();
 		}
-
-		Requirement(middle1, middle2, cmp);
-		Save2IR(FourElements(IR_GOTO, "", "", test, g_scope));
+		
+		
 		Save2IR(FourElements(IR_LABEL, "", "", loop, g_scope));
+		Requirement(middle1, middle2, cmp);
+		Save2IR(FourElements(GetOppositeBranchIns(cmp), middle1, middle2, next, g_scope));
+		//Save2IR(FourElements(IR_GOTO, "", "", test, g_scope));
+		
 		//;
 		if (sym != "SEMICN") Error('k');
 		else {
@@ -1886,9 +1852,8 @@ void WhileStatement()
 		Statement();
 
 		Save2IR(FourElements(op, var_name2, i_length, var_name, g_scope));
-
-		Save2IR(FourElements(IR_LABEL, "", "", test, g_scope));
-		Save2IR(FourElements(GetBranchIns(cmp), middle1, middle2, loop, g_scope));
+		Save2IR(FourElements(IR_GOTO, "", "", loop, g_scope));
+		Save2IR(FourElements(IR_LABEL, "", "", next, g_scope));
 	}
 	SaveGrammer("<循环语句>");
 }
@@ -2092,8 +2057,8 @@ void MainFunction()
 
 	name = "all_offsets";
 	Save2LocalTable();
-
-	Save2IR(FourElements(IR_FEND, to_string(g_offset), "", "main", g_scope));
+	Save2IR(FourElements(IR_LABEL, "", "", "main_end", g_scope));
+	Save2IR(FourElements(IR_FEND, to_string(g_offset), "0", "main", g_scope));
 	isInFuncDef = false;
 	//
 	all_local_tables["main"] = localTable;
@@ -2112,49 +2077,6 @@ void DeclareHead()
 	SaveGrammer("<声明头部>");
 	NextSym();
 }
-////＜参数表＞    ::=  ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}| ＜空＞
-//void ParameterTable()
-//{
-//
-//	if (sym == "INTTK" || sym == "CHARTK") {
-//		SaveLex();
-//		if (sym == "INTTK") {
-//			parakind.push_back("int");
-//		}
-//		else {
-//			parakind.push_back("char");
-//		}
-//		//标识符
-//		NextSym();
-//		paraname.push_back(word);
-//
-//		defType[word] = true;
-//		// 
-//
-//		// 
-//		NextSym();
-//		while (sym == "COMMA") {
-//			SaveLex();
-//			// 类型标识符
-//			NextSym();
-//			SaveLex();
-//
-//			if (sym == "INTTK") {parakind.push_back("int");}
-//			else {parakind.push_back("char");}
-//
-//			//标识符
-//			NextSym();
-//			SaveLex();
-//			paraname.push_back(word);
-//			Save2IR(FourElements(IR_PARA, "", "", word, g_scope));
-//			NextSym();
-//		}
-//	}
-//	// else 就是空 ，不用处理，直接输出
-//	SaveGrammer("<参数表>");
-//}
-//＜有返回值函数定义＞  ::=  ＜声明头部＞'('＜参数表＞')' '{'＜复合语句＞'}'  
-
 //＜参数表＞    ::=  ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}| ＜空＞
 void ParameterTable()
 {
@@ -2319,45 +2241,55 @@ void FuncDefWithReturn()
 	Save2LocalTable();
 	g_offset += 4; 
 
-
+	name = "all_offsets";
+	int all_the_offsets = g_offset;
+	Save2LocalTable();
+	//g_offset += 4;
 	// 在函数定义的最后统一将所有参数参数存到符号表中
 	// 下面分配的是参数的栈空间
 	int para_num = parameter_list.size();
 	type = "para";
-	if (para_num <= 4) {
-		for (int i = 0; i < para_num; i++) {
-			name = parameter_list[i].first;
-			kind = parameter_list[i].second;
+	for (int i = para_num - 1; i >= 0; i--) {
+		name = parameter_list[i].first;
+		kind = parameter_list[i].second;
 
-			Save2LocalTable();
-			g_offset += 4;
-
-		}
+		Save2LocalTable();
+		g_offset += 4;
 	}
-	else {
-		// 0 1 2 3 存到 a0 ~ a3
-		for (int i = 0; i < 4; i++) {
-			name = parameter_list[i].first;
-			kind = parameter_list[i].second;
 
-			Save2LocalTable();
-			g_offset += 4;
+	//if (para_num <= 4) {
+	//	for (int i = 0; i < para_num; i++) {
+	//		name = parameter_list[i].first;
+	//		kind = parameter_list[i].second;
 
-		}
-		// n n-1 n-2 ,,, 4 倒着存到栈中
-		for (int i = para_num - 1; i >= 4; i--) {
-			name = parameter_list[i].first;
-			kind = parameter_list[i].second;
+	//		Save2LocalTable();
+	//		g_offset += 4;
 
-			Save2LocalTable();
-			g_offset += 4;
-		}
-	}
+	//	}
+	//}
+	//else {
+	//	// 0 1 2 3 存到 a0 ~ a3
+	//	for (int i = 0; i < 4; i++) {
+	//		name = parameter_list[i].first;
+	//		kind = parameter_list[i].second;
+
+	//		Save2LocalTable();
+	//		g_offset += 4;
+
+	//	}
+	//	// n n-1 n-2 ,,, 4 倒着存到栈中
+	//	for (int i = para_num - 1; i >= 4; i--) {
+	//		name = parameter_list[i].first;
+	//		kind = parameter_list[i].second;
+
+	//		Save2LocalTable();
+	//		g_offset += 4;
+	//	}
+	//}
 	
-	name = "all_offsets";
-	Save2LocalTable();
-
-	Save2IR(FourElements(IR_FEND, to_string(g_offset),"",func_name, g_scope));
+	
+	Save2IR(FourElements(IR_LABEL, "", "", func_name + "_end", g_scope));
+	Save2IR(FourElements(IR_FEND, to_string(all_the_offsets),to_string(para_num),func_name, g_scope));
 
 
 	isInFuncDef = false;
@@ -2432,46 +2364,60 @@ void FuncDefWithoutReturn()
 	Save2LocalTable();
 	g_offset += 4;
 
+
+	name = "all_offsets";
+	int all_the_offsets = g_offset;
+	Save2LocalTable();
 	// 在函数定义的最后统一将所有参数参数存到符号表中
 
 	// 下面分配的是参数的栈空间
 	int para_num = parameter_list.size();
 	type = "para";
-	if (para_num <= 4) {
-		for (int i = 0; i < para_num; i++) {
-			name = parameter_list[i].first;
-			kind = parameter_list[i].second;
+	// =n-1 n-2 ,,, 0 倒着存到栈中
+	for (int i = para_num - 1; i >= 0; i--) {
+		name = parameter_list[i].first;
+		kind = parameter_list[i].second;
 
-			Save2LocalTable();
-			g_offset += 4;
-
-		}
+		Save2LocalTable();
+		g_offset += 4;
 	}
-	else {
-		// 0 1 2 3 存到 a0 ~ a3
-		for (int i = 0; i < 4; i++) {
-			name = parameter_list[i].first;
-			kind = parameter_list[i].second;
 
-			Save2LocalTable();
-			g_offset += 4;
+	//if (para_num <= 4) {
+	//	for (int i = 0; i < para_num; i++) {
+	//		name = parameter_list[i].first;
+	//		kind = parameter_list[i].second;
 
-		}
-		// n n-1 n-2 ,,, 4 倒着存到栈中
-		for (int i = para_num - 1; i >= 4; i--) {
-			name = parameter_list[i].first;
-			kind = parameter_list[i].second;
+	//		Save2LocalTable();
+	//		g_offset += 4;
 
-			Save2LocalTable();
-			g_offset += 4;
-		}
-	}
+	//	}
+	//}
+	//else {
+	//	// 0 1 2 3 存到 a0 ~ a3
+	//	for (int i = 0; i < 4; i++) {
+	//		name = parameter_list[i].first;
+	//		kind = parameter_list[i].second;
+
+	//		Save2LocalTable();
+	//		g_offset += 4;
+
+	//	}
+	//	// n n-1 n-2 ,,, 4 倒着存到栈中
+	//	for (int i = para_num - 1; i >= 4; i--) {
+	//		name = parameter_list[i].first;
+	//		kind = parameter_list[i].second;
+
+	//		Save2LocalTable();
+	//		g_offset += 4;
+	//	}
+	//}
 	// 把总的offset放入local table
-	name = "all_offsets";
-	Save2LocalTable();
+
+	
 
 	isInFuncDef = false;
-	Save2IR(FourElements(IR_FEND, to_string(g_offset), "", func_name, g_scope));
+	Save2IR(FourElements(IR_LABEL, "", "", func_name + "_end", g_scope));
+	Save2IR(FourElements(IR_FEND, to_string(all_the_offsets), to_string(para_num), func_name, g_scope));
 
 	all_local_tables[func_name] = localTable;
 	localTable.clear();

@@ -1,24 +1,24 @@
 #include "public.h"
 using namespace std;
 
-char text[10000]; // save the source code read from the testfile.txt
-char token[1000]; // global, save the current string
-char symbol[10];
+char text[100000]; // save the source code read from the testfile.txt
+char token[10000]; // global, save the current string
+char symbol[1000];
 char tmpChar;
 int totalLen; // the length of the text
 int cur = 0; // global pointer
 int slength = 0;
 //文件相关
-FILE* fp, * out, *errorfile, *mips_file;
-int MAX_LINE = 100;
-char buffer[100];
+FILE *fp, *out, *errorfile, *mips_file, *mid_file;
+int MAX_LINE = 10000;
+char buffer[10000];
 bool isFirstInLine = false;
 //work3
 string sym;
 string word;
-struct Item s[1000]; //存词法分析的结果
+struct Item s[100000]; //存词法分析的结果
 int symcur = 0; //
-struct Item grammer[10000];// 存语法分析的结果,包括汉字
+struct Item grammer[100000];// 存语法分析的结果,包括汉字
 int grammerl = 0; // grammer数组的长度
 map<string, bool> defType;
 // 错误处理

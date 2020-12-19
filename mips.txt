@@ -1,63 +1,1366 @@
 
 
 .data
+	a: .space 4000
+	seed: .space 12
+	staticvalue: .space 4
 
 .text
+
+
+	li $t1 19971231
+	li $t2 0
+	sw $t1 seed($t2)
+
+	li $t1 19981013
+	li $t2 4
+	sw $t1 seed($t2)
+
+	li $t1 1000000007
+	li $t2 8
+	sw $t1 seed($t2)
+
+
+	li $t1 0
+	li $t2 0
+	sw $t1 staticvalue($t2)
+
 	j main
-main:
-	addi $sp $sp -24
-	sw $fp 16($sp)
-	sw $ra 20($sp)
+myscanf:
+	addiu $sp $sp -12
+	sw $fp 4($sp)
+	sw $ra 8($sp)
 	move $fp $sp
 
 
-	li $t1 3
-	sw $t1 0($fp)
+	li $v0 5
+	syscall
+	sw $v0 0($fp)
 
+	lw $t1 0($fp)
+	move $s1 $t1
+
+	j myscanf_end
+
+myscanf_end:
+
+	move $sp $fp
+	lw $fp 4($sp)
+	lw $ra 8($sp)
+	addiu $sp $sp 12
+	jr $ra
+
+myprintf:
+	addiu $sp $sp -8
+	sw $fp 0($sp)
+	sw $ra 4($sp)
+	move $fp $sp
+
+
+	lw $a0 8($fp)
+	li $v0 1
+	syscall
+
+	addiu $a0 $0 '\n'
+	li $v0 11
+	syscall
+
+	j myprintf_end
+
+myprintf_end:
+
+	move $sp $fp
+	lw $fp 0($sp)
+	lw $ra 4($sp)
+	addiu $sp $sp 8
+	jr $ra
+
+set:
+	addiu $sp $sp -708
+	sw $fp 700($sp)
+	sw $ra 704($sp)
+	move $fp $sp
+
+
+
+
+
+	li $t1 10
+	li $t2 0
+	addiu $t2 $t2 124
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+
+	li $t1 0
+	li $t2 0
+	addiu $t2 $t2 128
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	li $t3 0
+	sw $t3 132($fp)
 
 	li $t1 1
-	sw $t1 4($fp)
+	lw $t2 132($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
 
-	j label_1
+	li $t3 0
+	sw $t3 140($fp)
+
+	lw $t2 140($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 136($fp)
+
+	lw $t1 136($fp)
+	sll $t3 $t1 1
+	sw $t3 144($fp)
+
+	addiu $t1 $0 1
+	sll $t3 $t1 2
+	sw $t3 148($fp)
+
+	lw $t1 144($fp)
+	lw $t2 148($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 1
+	sll $t3 $t1 2
+	sw $t3 156($fp)
+
+	lw $t2 156($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 152($fp)
+
+	lw $t1 152($fp)
+	sll $t3 $t1 1
+	sw $t3 160($fp)
+
+	addiu $t1 $0 2
+	sll $t3 $t1 2
+	sw $t3 164($fp)
+
+	lw $t1 160($fp)
+	lw $t2 164($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 2
+	sll $t3 $t1 2
+	sw $t3 172($fp)
+
+	lw $t2 172($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 168($fp)
+
+	lw $t1 168($fp)
+	sll $t3 $t1 1
+	sw $t3 176($fp)
+
+	addiu $t1 $0 3
+	sll $t3 $t1 2
+	sw $t3 180($fp)
+
+	lw $t1 176($fp)
+	lw $t2 180($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 3
+	sll $t3 $t1 2
+	sw $t3 188($fp)
+
+	lw $t2 188($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 184($fp)
+
+	lw $t1 184($fp)
+	sll $t3 $t1 1
+	sw $t3 192($fp)
+
+	addiu $t1 $0 4
+	sll $t3 $t1 2
+	sw $t3 196($fp)
+
+	lw $t1 192($fp)
+	lw $t2 196($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 4
+	sll $t3 $t1 2
+	sw $t3 204($fp)
+
+	lw $t2 204($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 200($fp)
+
+	lw $t1 200($fp)
+	sll $t3 $t1 1
+	sw $t3 208($fp)
+
+	addiu $t1 $0 5
+	sll $t3 $t1 2
+	sw $t3 212($fp)
+
+	lw $t1 208($fp)
+	lw $t2 212($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 5
+	sll $t3 $t1 2
+	sw $t3 220($fp)
+
+	lw $t2 220($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 216($fp)
+
+	lw $t1 216($fp)
+	sll $t3 $t1 1
+	sw $t3 224($fp)
+
+	addiu $t1 $0 6
+	sll $t3 $t1 2
+	sw $t3 228($fp)
+
+	lw $t1 224($fp)
+	lw $t2 228($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 6
+	sll $t3 $t1 2
+	sw $t3 236($fp)
+
+	lw $t2 236($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 232($fp)
+
+	lw $t1 232($fp)
+	sll $t3 $t1 1
+	sw $t3 240($fp)
+
+	addiu $t1 $0 7
+	sll $t3 $t1 2
+	sw $t3 244($fp)
+
+	lw $t1 240($fp)
+	lw $t2 244($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 7
+	sll $t3 $t1 2
+	sw $t3 252($fp)
+
+	lw $t2 252($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 248($fp)
+
+	lw $t1 248($fp)
+	sll $t3 $t1 1
+	sw $t3 256($fp)
+
+	addiu $t1 $0 8
+	sll $t3 $t1 2
+	sw $t3 260($fp)
+
+	lw $t1 256($fp)
+	lw $t2 260($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 8
+	sll $t3 $t1 2
+	sw $t3 268($fp)
+
+	lw $t2 268($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 264($fp)
+
+	lw $t1 264($fp)
+	sll $t3 $t1 1
+	sw $t3 272($fp)
+
+	addiu $t1 $0 9
+	sll $t3 $t1 2
+	sw $t3 276($fp)
+
+	lw $t1 272($fp)
+	lw $t2 276($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	addiu $t1 $0 9
+	sll $t3 $t1 2
+	sw $t3 284($fp)
+
+	lw $t2 284($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 280($fp)
+
+	lw $t1 280($fp)
+	sll $t3 $t1 1
+	sw $t3 288($fp)
+
+	addiu $t1 $0 10
+	sll $t3 $t1 2
+	sw $t3 292($fp)
+
+	lw $t1 288($fp)
+	lw $t2 292($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
 
 label_3:
 
-	lw $t1 4($fp)
-	li $t2 2
+	lw $t1 124($fp)
+	addiu $t2 $0 30
+	subu $t3 $t1 $t2
+	bgez $t3 label_2 
+
+	lw $t1 124($fp)
+	addiu $t2 $0 1
+	addu $t3 $t1 $t2
+	sw $t3 296($fp)
+
+	lw $t1 296($fp)
+	li $t2 0
+	addiu $t2 $t2 124
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 124($fp)
+	addiu $t2 $0 1
+	subu $t3 $t1 $t2
+	sw $t3 300($fp)
+
+	lw $t1 300($fp)
+	sll $t3 $t1 2
+	sw $t3 308($fp)
+
+	lw $t2 308($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 304($fp)
+
+	lw $t1 304($fp)
+	sll $t3 $t1 1
+	sw $t3 312($fp)
+
+	lw $t1 124($fp)
+	sll $t3 $t1 2
+	sw $t3 316($fp)
+
+	lw $t1 312($fp)
+	lw $t2 316($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	j label_3
+
+label_2:
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 320($fp)
+
+	lw $t1 320($fp)
+	addiu $t2 $0 1000
+	subu $t3 $t1 $t2
+	bltz $t3 label_4 
+
+	addiu $t1 $0 0
+	move $s1 $t1
+
+	j set_end
+
+label_4:
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 324($fp)
+
+	lw $t1 324($fp)
+	sll $t3 $t1 2
+	sw $t3 332($fp)
+
+	lw $t2 332($fp)
+	lw $t1 a($t2)
+	sw $t1 328($fp)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 336($fp)
+
+	lw $t1 336($fp)
+	addiu $t2 $0 30
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 340($fp)
+
+	lw $t1 712($fp)
+	lw $t2 340($fp)
+	subu $t3 $t1 $t2
+	sw $t3 344($fp)
+
+	lw $t1 344($fp)
+	sll $t3 $t1 2
+	sw $t3 352($fp)
+
+	lw $t2 352($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 348($fp)
+
+	lw $t1 348($fp)
+	li $t2 0
+	addiu $t2 $t2 356
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 328($fp)
+	lw $t2 356($fp)
+	div $t1 $t2
+	mflo $t3
+	sw $t3 360($fp)
+
+	lw $t1 360($fp)
+	li $t2 0
+	addiu $t2 $t2 364
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 368($fp)
+
+	lw $t1 368($fp)
+	sll $t3 $t1 2
+	sw $t3 376($fp)
+
+	lw $t2 376($fp)
+	lw $t1 a($t2)
+	sw $t1 372($fp)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 380($fp)
+
+	lw $t1 380($fp)
+	addiu $t2 $0 30
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 384($fp)
+
+	lw $t1 712($fp)
+	lw $t2 384($fp)
+	subu $t3 $t1 $t2
+	sw $t3 388($fp)
+
+	lw $t1 388($fp)
+	sll $t3 $t1 2
+	sw $t3 396($fp)
+
+	lw $t2 396($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 392($fp)
+
+	lw $t1 392($fp)
+	li $t2 0
+	addiu $t2 $t2 400
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 372($fp)
+	lw $t2 400($fp)
+	div $t1 $t2
+	mflo $t3
+	sw $t3 404($fp)
+
+	lw $t1 404($fp)
+	li $t2 0
+	addiu $t2 $t2 408
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 408($fp)
+	srl $t3 $t1 1
+	sw $t3 412($fp)
+
+	lw $t1 412($fp)
+	sll $t3 $t1 1
+	sw $t3 416($fp)
+
+	lw $t1 364($fp)
+	lw $t2 416($fp)
+	subu $t3 $t1 $t2
+	sw $t3 420($fp)
+
+	lw $t1 420($fp)
+	lw $t2 708($fp)
+	beq $t1 $t2 label_5
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 424($fp)
+
+	lw $t1 424($fp)
+	sll $t3 $t1 2
+	sw $t3 432($fp)
+
+	lw $t2 432($fp)
+	lw $t1 a($t2)
+	sw $t1 428($fp)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 436($fp)
+
+	lw $t1 436($fp)
+	addiu $t2 $0 30
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 440($fp)
+
+	lw $t1 712($fp)
+	lw $t2 440($fp)
+	subu $t3 $t1 $t2
+	sw $t3 444($fp)
+
+	lw $t1 444($fp)
+	sll $t3 $t1 2
+	sw $t3 452($fp)
+
+	lw $t2 452($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 448($fp)
+
+	lw $t1 448($fp)
+	li $t2 0
+	addiu $t2 $t2 456
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 428($fp)
+	lw $t2 456($fp)
+	div $t1 $t2
+	mflo $t3
+	sw $t3 460($fp)
+
+	lw $t1 460($fp)
+	li $t2 0
+	addiu $t2 $t2 464
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 468($fp)
+
+	lw $t1 468($fp)
+	sll $t3 $t1 2
+	sw $t3 476($fp)
+
+	lw $t2 476($fp)
+	lw $t1 a($t2)
+	sw $t1 472($fp)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 480($fp)
+
+	lw $t1 480($fp)
+	addiu $t2 $0 30
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 484($fp)
+
+	lw $t1 712($fp)
+	lw $t2 484($fp)
+	subu $t3 $t1 $t2
+	sw $t3 488($fp)
+
+	lw $t1 488($fp)
+	sll $t3 $t1 2
+	sw $t3 496($fp)
+
+	lw $t2 496($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 492($fp)
+
+	lw $t1 492($fp)
+	li $t2 0
+	addiu $t2 $t2 500
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 472($fp)
+	lw $t2 500($fp)
+	div $t1 $t2
+	mflo $t3
+	sw $t3 504($fp)
+
+	lw $t1 504($fp)
+	li $t2 0
+	addiu $t2 $t2 508
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 508($fp)
+	srl $t3 $t1 1
+	sw $t3 512($fp)
+
+	lw $t1 512($fp)
+	sll $t3 $t1 1
+	sw $t3 516($fp)
+
+	lw $t1 464($fp)
+	lw $t2 516($fp)
+	subu $t3 $t1 $t2
+	sw $t3 520($fp)
+
+	lw $t1 520($fp)
+	addiu $t2 $0 0
+	bne $t1 $t2 label_6
+
+	lw $t1 708($fp)
+	addiu $t2 $0 1
+	bne $t1 $t2 label_7
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 524($fp)
+
+	lw $t1 524($fp)
+	addiu $t2 $0 30
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 528($fp)
+
+	lw $t1 712($fp)
+	lw $t2 528($fp)
+	subu $t3 $t1 $t2
+	sw $t3 532($fp)
+
+	lw $t1 532($fp)
+	sll $t3 $t1 2
+	sw $t3 540($fp)
+
+	lw $t2 540($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 536($fp)
+
+	lw $t1 536($fp)
+	li $t2 0
+	addiu $t2 $t2 544
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 544($fp)
+	li $t2 0
+	addiu $t2 $t2 128
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+label_7:
+
+label_6:
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 548($fp)
+
+	lw $t1 548($fp)
+	sll $t3 $t1 2
+	sw $t3 556($fp)
+
+	lw $t2 556($fp)
+	lw $t1 a($t2)
+	sw $t1 552($fp)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 560($fp)
+
+	lw $t1 560($fp)
+	addiu $t2 $0 30
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 564($fp)
+
+	lw $t1 712($fp)
+	lw $t2 564($fp)
+	subu $t3 $t1 $t2
+	sw $t3 568($fp)
+
+	lw $t1 568($fp)
+	sll $t3 $t1 2
+	sw $t3 576($fp)
+
+	lw $t2 576($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 572($fp)
+
+	lw $t1 572($fp)
+	li $t2 0
+	addiu $t2 $t2 580
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 552($fp)
+	lw $t2 580($fp)
+	div $t1 $t2
+	mflo $t3
+	sw $t3 584($fp)
+
+	lw $t1 584($fp)
+	li $t2 0
+	addiu $t2 $t2 588
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 592($fp)
+
+	lw $t1 592($fp)
+	sll $t3 $t1 2
+	sw $t3 600($fp)
+
+	lw $t2 600($fp)
+	lw $t1 a($t2)
+	sw $t1 596($fp)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 604($fp)
+
+	lw $t1 604($fp)
+	addiu $t2 $0 30
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 608($fp)
+
+	lw $t1 712($fp)
+	lw $t2 608($fp)
+	subu $t3 $t1 $t2
+	sw $t3 612($fp)
+
+	lw $t1 612($fp)
+	sll $t3 $t1 2
+	sw $t3 620($fp)
+
+	lw $t2 620($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 616($fp)
+
+	lw $t1 616($fp)
+	li $t2 0
+	addiu $t2 $t2 624
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 596($fp)
+	lw $t2 624($fp)
+	div $t1 $t2
+	mflo $t3
+	sw $t3 628($fp)
+
+	lw $t1 628($fp)
+	li $t2 0
+	addiu $t2 $t2 632
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 632($fp)
+	srl $t3 $t1 1
+	sw $t3 636($fp)
+
+	lw $t1 636($fp)
+	sll $t3 $t1 1
+	sw $t3 640($fp)
+
+	lw $t1 588($fp)
+	lw $t2 640($fp)
+	subu $t3 $t1 $t2
+	sw $t3 644($fp)
+
+	lw $t1 644($fp)
+	addiu $t2 $0 1
+	bne $t1 $t2 label_8
+
+	lw $t1 708($fp)
+	addiu $t2 $0 0
+	bne $t1 $t2 label_9
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 648($fp)
+
+	lw $t1 648($fp)
+	addiu $t2 $0 30
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 652($fp)
+
+	lw $t1 712($fp)
+	lw $t2 652($fp)
+	subu $t3 $t1 $t2
+	sw $t3 656($fp)
+
+	lw $t1 656($fp)
+	sll $t3 $t1 2
+	sw $t3 664($fp)
+
+	lw $t2 664($fp)
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	lw $t1 0($t2)
+	sw $t1 660($fp)
+
+	lw $t1 660($fp)
+	li $t2 0
+	addiu $t2 $t2 668
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 128($fp)
+	lw $t2 668($fp)
+	subu $t3 $t1 $t2
+	sw $t3 672($fp)
+
+	lw $t1 672($fp)
+	li $t2 0
+	addiu $t2 $t2 128
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+label_9:
+
+label_8:
+
+label_5:
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 676($fp)
+
+	lw $t1 712($fp)
+	addiu $t2 $0 30
+	div $t1 $t2
+	mflo $t3
+	sw $t3 680($fp)
+
+	lw $t1 680($fp)
+	sll $t3 $t1 2
+	sw $t3 688($fp)
+
+	lw $t2 688($fp)
+	lw $t1 a($t2)
+	sw $t1 684($fp)
+
+	lw $t1 684($fp)
+	lw $t2 128($fp)
+	addu $t3 $t1 $t2
+	sw $t3 692($fp)
+
+	lw $t1 676($fp)
+	sll $t3 $t1 2
+	sw $t3 696($fp)
+
+	lw $t1 692($fp)
+	lw $t2 696($fp)
+	sw $t1 a($t2)
+
+	addiu $t1 $0 0
+	move $s1 $t1
+
+	j set_end
+
+set_end:
+
+	move $sp $fp
+	lw $fp 700($sp)
+	lw $ra 704($sp)
+	addiu $sp $sp 708
+	jr $ra
+
+rand:
+	addiu $sp $sp -72
+	sw $fp 64($sp)
+	sw $ra 68($sp)
+	move $fp $sp
+
+	li $t3 0
+	sw $t3 4($fp)
+
+	lw $t2 4($fp)
+	lw $t1 seed($t2)
+	sw $t1 0($fp)
+
+	lw $t1 staticvalue($0)
+	lw $t2 0($fp)
 	mult $t1 $t2
 	mflo $t3
 	sw $t3 8($fp)
 
+	addiu $t1 $0 1
+	sll $t3 $t1 2
+	sw $t3 16($fp)
+
+	lw $t2 16($fp)
+	lw $t1 seed($t2)
+	sw $t1 12($fp)
+
 	lw $t1 8($fp)
-	sw $t1 4($fp)
+	lw $t2 12($fp)
+	addu $t3 $t1 $t2
+	sw $t3 20($fp)
 
-	lw $t1 0($fp)
-	li $t2 1
-	sub $t3 $t1 $t2
-	sw $t3 12($fp)
-
-	lw $t1 12($fp)
-	sw $t1 0($fp)
-
-label_1:
-
-	lw $t1 0($fp)
+	lw $t1 20($fp)
 	li $t2 0
-	sub $t3 $t1 $t2
-	bgez $t3 label_3 
+	sw $t1 staticvalue($t2)
 
-	lw $a0 4($fp)
-	li $v0 1
-	syscall
+	addiu $t1 $0 2
+	sll $t3 $t1 2
+	sw $t3 28($fp)
 
-	addi $a0 $0 '\n'
-	li $v0 11
-	syscall
+	lw $t2 28($fp)
+	lw $t1 seed($t2)
+	sw $t1 24($fp)
+
+	lw $t1 staticvalue($0)
+	lw $t2 24($fp)
+	div $t1 $t2
+	mflo $t3
+	sw $t3 32($fp)
+
+	addiu $t1 $0 2
+	sll $t3 $t1 2
+	sw $t3 40($fp)
+
+	lw $t2 40($fp)
+	lw $t1 seed($t2)
+	sw $t1 36($fp)
+
+	lw $t1 32($fp)
+	lw $t2 36($fp)
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 44($fp)
+
+	lw $t1 staticvalue($0)
+	lw $t2 44($fp)
+	subu $t3 $t1 $t2
+	sw $t3 48($fp)
+
+	lw $t1 48($fp)
+	li $t2 0
+	sw $t1 staticvalue($t2)
+
+	lw $t1 staticvalue($0)
+	addiu $t2 $0 0
+	subu $t3 $t1 $t2
+	bgez $t3 label_10 
+
+	addiu $t1 $0 2
+	sll $t3 $t1 2
+	sw $t3 56($fp)
+
+	lw $t2 56($fp)
+	lw $t1 seed($t2)
+	sw $t1 52($fp)
+
+	lw $t1 52($fp)
+	lw $t2 staticvalue($0)
+	addu $t3 $t1 $t2
+	sw $t3 60($fp)
+
+	lw $t1 60($fp)
+	li $t2 0
+	sw $t1 staticvalue($t2)
+
+label_10:
+
+	lw $t1 staticvalue($0)
+	move $s1 $t1
+
+	j rand_end
+
+rand_end:
 
 	move $sp $fp
-	lw $fp 16($sp)
-	lw $ra 20($sp)
-	addi $sp $sp 24
+	lw $fp 64($sp)
+	lw $ra 68($sp)
+	addiu $sp $sp 72
+	jr $ra
+
+main:
+	addiu $sp $sp -140
+	sw $fp 132($sp)
+	sw $ra 136($sp)
+	move $fp $sp
+
+
+
+
+
+
+	li $t1 0
+	li $t2 0
+	addiu $t2 $t2 16
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+
+	li $t1 0
+	li $t2 0
+	addiu $t2 $t2 20
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+
+	li $t1 0
+	li $t2 0
+	addiu $t2 $t2 24
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+label_13:
+
+	lw $t1 24($fp)
+	addiu $t2 $0 1000
+	subu $t3 $t1 $t2
+	bgez $t3 label_12 
+
+	lw $t1 24($fp)
+	sll $t3 $t1 2
+	sw $t3 28($fp)
+
+	li $t1 0
+	lw $t2 28($fp)
+	sw $t1 a($t2)
+
+	lw $t1 24($fp)
+	addiu $t2 $0 1
+	addu $t3 $t1 $t2
+	sw $t3 32($fp)
+
+	lw $t1 32($fp)
+	li $t2 0
+	addiu $t2 $t2 24
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	j label_13
+
+label_12:
+
+	jal myscanf
+
+	sw $s1 36($fp)
+
+	lw $t1 36($fp)
+	li $t2 0
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	jal myscanf
+
+	sw $s1 40($fp)
+
+	lw $t1 40($fp)
+	li $t2 0
+	sw $t1 staticvalue($t2)
+
+label_16:
+
+	lw $t1 0($fp)
+	addiu $t2 $0 0
+	subu $t3 $t1 $t2
+	blez $t3 label_15 
+
+	lw $t1 0($fp)
+	addiu $t2 $0 1
+	subu $t3 $t1 $t2
+	sw $t3 44($fp)
+
+	lw $t1 44($fp)
+	li $t2 0
+	addiu $t2 $t2 0
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	jal rand
+
+	sw $s1 48($fp)
+
+	lw $t1 48($fp)
+	li $t2 0
+	addiu $t2 $t2 12
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 12($fp)
+	addiu $t2 $0 300000
+	div $t1 $t2
+	mflo $t3
+	sw $t3 52($fp)
+
+	lw $t1 52($fp)
+	addiu $t2 $0 300000
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 56($fp)
+
+	lw $t1 12($fp)
+	lw $t2 56($fp)
+	subu $t3 $t1 $t2
+	sw $t3 60($fp)
+
+	lw $t1 60($fp)
+	li $t2 0
+	addiu $t2 $t2 4
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	jal rand
+
+	sw $s1 64($fp)
+
+	lw $t1 64($fp)
+	li $t2 0
+	addiu $t2 $t2 12
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 12($fp)
+	srl $t3 $t1 1
+	sw $t3 68($fp)
+
+	lw $t1 68($fp)
+	sll $t3 $t1 1
+	sw $t3 72($fp)
+
+	lw $t1 12($fp)
+	lw $t2 72($fp)
+	subu $t3 $t1 $t2
+	sw $t3 76($fp)
+
+	lw $t1 76($fp)
+	li $t2 0
+	addiu $t2 $t2 8
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 4($fp)
+	addiu $sp $sp -4
+	sw $t1 0($sp)
+
+	lw $t1 8($fp)
+	addiu $sp $sp -4
+	sw $t1 0($sp)
+
+	jal set
+	addiu $sp $sp 8
+
+	j label_16
+
+label_15:
+
+label_19:
+
+	lw $t1 20($fp)
+	addiu $t2 $0 1000
+	subu $t3 $t1 $t2
+	bgez $t3 label_18 
+
+	lw $t1 20($fp)
+	sll $t3 $t1 2
+	sw $t3 84($fp)
+
+	lw $t2 84($fp)
+	lw $t1 a($t2)
+	sw $t1 80($fp)
+
+	lw $t1 20($fp)
+	sll $t3 $t1 2
+	sw $t3 92($fp)
+
+	lw $t2 92($fp)
+	lw $t1 a($t2)
+	sw $t1 88($fp)
+
+	lw $t1 88($fp)
+	addiu $t2 $0 100000
+	div $t1 $t2
+	mflo $t3
+	sw $t3 96($fp)
+
+	lw $t1 96($fp)
+	addiu $t2 $0 100000
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 100($fp)
+
+	lw $t1 80($fp)
+	lw $t2 100($fp)
+	subu $t3 $t1 $t2
+	sw $t3 104($fp)
+
+	lw $t1 104($fp)
+	li $t2 0
+	addiu $t2 $t2 108
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 16($fp)
+	lw $t2 108($fp)
+	addu $t3 $t1 $t2
+	sw $t3 112($fp)
+
+	lw $t1 112($fp)
+	li $t2 0
+	addiu $t2 $t2 16
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 16($fp)
+	addiu $t2 $0 100000
+	div $t1 $t2
+	mflo $t3
+	sw $t3 116($fp)
+
+	lw $t1 116($fp)
+	addiu $t2 $0 100000
+	mult $t1 $t2
+	mflo $t3
+	sw $t3 120($fp)
+
+	lw $t1 16($fp)
+	lw $t2 120($fp)
+	subu $t3 $t1 $t2
+	sw $t3 124($fp)
+
+	lw $t1 124($fp)
+	li $t2 0
+	addiu $t2 $t2 16
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	lw $t1 20($fp)
+	addiu $t2 $0 1
+	addu $t3 $t1 $t2
+	sw $t3 128($fp)
+
+	lw $t1 128($fp)
+	li $t2 0
+	addiu $t2 $t2 20
+	addu $t2 $fp $t2
+	sw $t1 0($t2)
+
+	j label_19
+
+label_18:
+
+	lw $t1 16($fp)
+	addiu $sp $sp -4
+	sw $t1 0($sp)
+
+	jal myprintf
+	addiu $sp $sp 4
+
+	j main_end
+
+main_end:
+
+	move $sp $fp
+	lw $fp 132($sp)
+	lw $ra 136($sp)
+	addiu $sp $sp 140
 
 	li $v0 10
 	syscall

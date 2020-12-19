@@ -13,17 +13,17 @@
 #include <algorithm>//transform
 #define MAXLE 10000
 using namespace std;
-extern char text[10000]; // save the source code read from the testfile.txt
-extern char token[1000]; // global, save the current string
-extern char symbol[10];
+extern char text[100000]; // save the source code read from the testfile.txt
+extern char token[10000]; // global, save the current string
+extern char symbol[1000];
 extern char tmpChar;
 extern int totalLen; // the length of the text
 extern int cur; // global pointer
 extern int slength;
 //
-extern FILE* fp, * out, *errorfile, *mips_file;
+extern FILE* fp, * out, *errorfile, *mips_file, *mid_file;
 extern int MAX_LINE;
-extern char buffer[100];
+extern char buffer[10000];
 extern bool isFirstInLine;
 // work3
 struct Item {
@@ -34,22 +34,16 @@ struct Item {
 	int line;
 	bool isfirst = false;
 };
-extern struct Item s[1000];
+extern struct Item s[100000];
 extern std::string sym;
 extern std::string word;
 extern int symcur;
-extern struct Item grammer[10000];
+extern struct Item grammer[100000];
 extern int grammerl;
 extern std::map<std::string, bool> defType;
-// 错误处理
-struct SymbolTable {
-	std::string name;
-	std::string type;
-	std::string level;
-};
-extern struct SymbolTable symtable[10000];
+
 // 记录行数
-extern int gline;
+extern int  gline;
 extern bool isInRequirement;
 extern bool isInFuncDefWithReturn; // 是否在<有返回值函数定义>里面
 extern bool isInFuncDefWithoutReturn; //是否在<无返回值函数定义>里面
@@ -80,23 +74,21 @@ struct node {
 
 	// 数组的初值放到下面的int数组里面
 	vector<int> initial_value_list;
-
 };
 
-//主map: 全局变量/常量 
+// 主map: 全局变量/常量 
 extern map<string, node> globalTable;
-//函数定义里面的map，用完之后就clear
+// 函数定义里面的map，用完之后就clear
 extern map<string, node> localTable;
 // 表示现在是在 函数定义 还是 全局变量(包括main)
 extern bool isInFuncDef;
 // 所有局部符号表
 extern map<string, map<string, node>> all_local_tables;
-
-
+// 保存到全部table
 void Save2GlobalTable();
 // 将其保存到localtable
 void Save2LocalTable();
-
+// 保存到符号表
 void Save2Table();
 
 extern string typeOfExpr;

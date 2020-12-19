@@ -52,6 +52,24 @@ string  GenerateMidVar()
 	}
 	return middle_var;
 }
+string  GenerateMidVar(string kind)
+{
+	string middle_var = "t_" + to_string(mid_var_num++);
+	// 先看是否在符号表中，在就直接返回
+
+	// 若这个中间变量不在符号表中，那就新建一个放进去。
+	if (!IsInLocalTable_GA(middle_var)) {
+		node tmp;
+		tmp.name = middle_var;
+		tmp.type = "middle";
+		tmp.kind = kind;
+		tmp.offset = g_offset;
+		tmp.scope = g_scope;
+		g_offset += 4;
+		localTable[tmp.name] = tmp;
+	}
+	return middle_var;
+}
 // 退出表达式的时候将mid_var_num置0
 void SetVarNum0()
 {

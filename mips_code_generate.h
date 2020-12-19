@@ -30,7 +30,8 @@ enum MIPS_OP {
 	M_BGEZ,
 	M_BLTZ,
 	M_BLEZ,
-	
+	M_SLL,
+	M_SRL,
 };
 
 // 目标代码分为三个部分，数据段、字符串(放在最后)、代码段

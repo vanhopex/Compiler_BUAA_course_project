@@ -51,6 +51,7 @@ struct FourElements {
 };
 string GenerateLabel();
 string  GenerateMidVar();
+string  GenerateMidVar(string kind);
 void SetVarNum0();
 void Save2IR(FourElements s);
 extern vector<FourElements> middle_code;
